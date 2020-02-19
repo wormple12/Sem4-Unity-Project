@@ -1837,7 +1837,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1043535239}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 46.7, y: 7.6, z: 19.6}
+  m_LocalPosition: {x: 46.7, y: 7.9, z: 19.6}
   m_LocalScale: {x: 10, y: 14, z: 12}
   m_Children: []
   m_Father: {fileID: 0}
@@ -3010,6 +3010,46 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 621110500973639123, guid: 9a7791d5664eea44b8230b8a35269c98,
+        type: 3}
+      propertyPath: sprintSpeedModifier
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 621110500973639123, guid: 9a7791d5664eea44b8230b8a35269c98,
+        type: 3}
+      propertyPath: maxSpeedInAir
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 621110500973639123, guid: 9a7791d5664eea44b8230b8a35269c98,
+        type: 3}
+      propertyPath: maxSpeedOnGround
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 621110500973639123, guid: 9a7791d5664eea44b8230b8a35269c98,
+        type: 3}
+      propertyPath: jumpForce
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 621110500973639127, guid: 9a7791d5664eea44b8230b8a35269c98,
+        type: 3}
+      propertyPath: sprintSpeedModifier
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 621110500973639127, guid: 9a7791d5664eea44b8230b8a35269c98,
+        type: 3}
+      propertyPath: accelerationSpeedInAir
+      value: 18
+      objectReference: {fileID: 0}
+    - target: {fileID: 621110500973639127, guid: 9a7791d5664eea44b8230b8a35269c98,
+        type: 3}
+      propertyPath: maxSpeedInAir
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 621110500973639127, guid: 9a7791d5664eea44b8230b8a35269c98,
+        type: 3}
+      propertyPath: maxSpeedOnGround
+      value: 4
+      objectReference: {fileID: 0}
     - target: {fileID: 932358048174348468, guid: 9a7791d5664eea44b8230b8a35269c98,
         type: 3}
       propertyPath: m_AnchorMin.y
@@ -3028,26 +3068,6 @@ PrefabInstance:
     - target: {fileID: 932358048174348468, guid: 9a7791d5664eea44b8230b8a35269c98,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1280711976372957478, guid: 9a7791d5664eea44b8230b8a35269c98,
-        type: 3}
-      propertyPath: m_textInfo.characterCount
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1280711976372957478, guid: 9a7791d5664eea44b8230b8a35269c98,
-        type: 3}
-      propertyPath: m_textInfo.wordCount
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1280711976372957478, guid: 9a7791d5664eea44b8230b8a35269c98,
-        type: 3}
-      propertyPath: m_textInfo.lineCount
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1280711976372957478, guid: 9a7791d5664eea44b8230b8a35269c98,
-        type: 3}
-      propertyPath: m_textInfo.pageCount
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1418908651919962660, guid: 9a7791d5664eea44b8230b8a35269c98,
@@ -3133,26 +3153,6 @@ PrefabInstance:
     - target: {fileID: 2628196106488484662, guid: 9a7791d5664eea44b8230b8a35269c98,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6881705145250230910, guid: 9a7791d5664eea44b8230b8a35269c98,
-        type: 3}
-      propertyPath: m_textInfo.characterCount
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6881705145250230910, guid: 9a7791d5664eea44b8230b8a35269c98,
-        type: 3}
-      propertyPath: m_textInfo.wordCount
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6881705145250230910, guid: 9a7791d5664eea44b8230b8a35269c98,
-        type: 3}
-      propertyPath: m_textInfo.lineCount
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6881705145250230910, guid: 9a7791d5664eea44b8230b8a35269c98,
-        type: 3}
-      propertyPath: m_textInfo.pageCount
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7423182629304047606, guid: 9a7791d5664eea44b8230b8a35269c98,
