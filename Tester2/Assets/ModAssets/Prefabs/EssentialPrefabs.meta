@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<< HEAD:Tester2/Assets/ModAssets/Prefabs/EssentialPrefabs.meta
 guid: aad43efda3a248a42b2839586a2abd4c
+=======
+guid: cacff848f9318c5488e29b53f0d2ab05
+>>>>>>> c897230f1800f7106f1307f1c52c5d8b7765b3dd:Tester2/Assets/DigitalKonstrukt.meta
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}
