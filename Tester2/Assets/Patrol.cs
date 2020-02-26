@@ -6,14 +6,15 @@ public class Patrol : MonoBehaviour {
 
     public float speed = 1;
     public float rotationSpeed = 2;
-    public float waitTime;
-    public float startWaitTime;
+    public float defaultWaitTime = 2;
+    private float waitTime;
 
     public Transform[] moveSpots;
     private int toSpot;
 
     void Start () {
         toSpot = 0;
+        waitTime = defaultWaitTime;
     }
 
     void Update () {
@@ -30,7 +31,7 @@ public class Patrol : MonoBehaviour {
                     } else {
                         toSpot = toSpot + 1;
                     }
-                    waitTime = startWaitTime;
+                    waitTime = defaultWaitTime;
                 } else {
                     waitTime -= Time.deltaTime;
                 }
@@ -45,8 +46,6 @@ public class Patrol : MonoBehaviour {
         float singleStep = rotationSpeed * Time.deltaTime;
         // Rotate the forward vector towards the target direction by one step
         Vector3 newDirection = Vector3.RotateTowards (transform.forward, targetDirection, singleStep, 0.0f);
-        // Draw a ray pointing at our target in
-        Debug.DrawRay (transform.position, newDirection, Color.red);
         // Calculate a rotation a step closer to the target and applies rotation to this object
         transform.rotation = Quaternion.LookRotation (newDirection);
     }

@@ -493,8 +493,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 0
   rotationSpeed: 2
-  waitTime: 0
-  startWaitTime: 0
+  defaultWaitTime: 2
   moveSpots: []
 --- !u!114 &43311642
 MonoBehaviour:
@@ -865,8 +864,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 0
   rotationSpeed: 2
-  waitTime: 0
-  startWaitTime: 0
+  defaultWaitTime: 2
   moveSpots: []
 --- !u!4 &130124595 stripped
 Transform:
@@ -1080,8 +1078,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 1
   rotationSpeed: 2
-  waitTime: 2
-  startWaitTime: 0
+  defaultWaitTime: 2
   moveSpots:
   - {fileID: 1401417005}
   - {fileID: 1635178936}
@@ -3447,7 +3444,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1401417004}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 10.24, y: -0.09000002, z: -0.13999939}
+  m_LocalPosition: {x: 10.24, y: 0, z: -0.13999939}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1391204257}
@@ -4597,6 +4594,11 @@ PrefabInstance:
         type: 3}
       propertyPath: recievesFallDamage
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 621110500973639123, guid: 9a7791d5664eea44b8230b8a35269c98,
+        type: 3}
+      propertyPath: groundCheckLayers.m_Bits
+      value: 513
       objectReference: {fileID: 0}
     - target: {fileID: 621110500973639127, guid: 9a7791d5664eea44b8230b8a35269c98,
         type: 3}
