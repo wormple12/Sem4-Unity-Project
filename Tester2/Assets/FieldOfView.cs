@@ -18,6 +18,10 @@ public class FieldOfView : MonoBehaviour {
 	public int edgeResolveIterations;
 	public float edgeDstThreshold;
 
+	public float rotateSpeed = 1.0f;
+	public float maxRotation = 0f;
+	private float startRotation;
+
 	public MeshFilter viewMeshFilter;
 	Mesh viewMesh;
 
@@ -25,12 +29,13 @@ public class FieldOfView : MonoBehaviour {
 		viewMesh = new Mesh ();
 		viewMesh.name = "View Mesh";
 		viewMeshFilter.mesh = viewMesh;
+		startRotation = transform.localEulerAngles.y;
 
 		StartCoroutine ("FindTargetsWithDelay", .2f);
 	}
 	void Update(){
-		//Vector3.RotateTowards(transform.position+1);
-		
+			
+		  transform.rotation = Quaternion.Euler(0f,startRotation + maxRotation * Mathf.Sin(Time.time * rotateSpeed), 0f);
 	} 
 
 	IEnumerator FindTargetsWithDelay(float delay) {

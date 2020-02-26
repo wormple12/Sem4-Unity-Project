@@ -5,6 +5,8 @@ TagManager:
   serializedVersion: 2
   tags:
   - Climbable
+  - lb_groundTarget
+  - lb_perchTarget
   layers:
   - Default
   - TransparentFX
@@ -15,9 +17,9 @@ TagManager:
   - 
   - 
   - PostProcessing
-  - 
+  - Objects
   - FirstPersonWeapon
-  - 
+  - Player
   - 
   - 
   - 
