@@ -3,28 +3,35 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Patrol : MonoBehaviour{
-/*
+
    public float speed;
    public float waitTime;
    public float startWaitTime;
 
    public Transform[] moveSpots;
-   private int randomSpot;
+   private int toSpot;
 
    void Start(){
-       randomSpot = Random.range(0, moveSpots.length);
+       toSpot = 0;
    }
 
    void Update(){
-       
-       transform.position = Vector2.MoveTowards(transform.position, moveSpots[randomSpot].position, speed * Time.deltaTime);
-        if(Vector2.Distance(transform.position, moveSpots[randomSpot].position) < 0.2f){
+ 
+       if(moveSpots.Length != 0){
+       transform.position = Vector3.MoveTowards(transform.position, moveSpots[toSpot].position, speed * Time.deltaTime);
+        
+        if(Vector3.Distance(transform.position, moveSpots[toSpot].position) < 0.2f){
             if(waitTime <= 0){
-                 randomSpot = Random.range(0, moveSpots.length);
-                 waitTime = startWaitTime;
+                if(toSpot == moveSpots.Length-1){
+                    toSpot = 0;
+                }else{
+                    toSpot = toSpot+1;
+                }
+                waitTime = startWaitTime;
             }else{
                 waitTime -= Time.deltaTime;
             }
         }
-   }*/
+   }
+   }
 }
