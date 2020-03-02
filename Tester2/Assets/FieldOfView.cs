@@ -25,16 +25,22 @@ public class FieldOfView : MonoBehaviour {
 	public MeshFilter viewMeshFilter;
 	Mesh viewMesh;
 
+	public GameObject gam;
+	public Health pl { get; set; }
 	void Start() {
 		viewMesh = new Mesh ();
 		viewMesh.name = "View Mesh";
 		viewMeshFilter.mesh = viewMesh;
 		startRotation = transform.localEulerAngles.y;
-
 		StartCoroutine ("FindTargetsWithDelay", .2f);
+		gam = GameObject.FindWithTag("Player");
+		pl = gam.GetComponent<Health> ();
 	}
 	void Update(){
-			
+		if(visibleTargets.Count > 0){
+			//Debug.LogError(gam.transform.position);
+			pl.Kill ();
+		}
 		  transform.rotation = Quaternion.Euler(0f,startRotation + maxRotation * Mathf.Sin(Time.time * rotateSpeed), 0f);
 	} 
 

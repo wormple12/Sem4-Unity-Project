@@ -4,7 +4,7 @@ using UnityEngine.SceneManagement;
 
 public class LoadSceneButton : MonoBehaviour
 {
-    public string sceneName = "";
+    public string sceneName = "SampleScene";
 
     private void Update()
     {
