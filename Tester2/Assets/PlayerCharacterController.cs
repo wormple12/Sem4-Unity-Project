@@ -53,7 +53,7 @@ public class PlayerCharacterController : MonoBehaviour {
     // ============================
     // CUSTOM INTERACTION VARIABLES
     [Header ("Interaction")]
-    public float interactionDistance = 1.5f;
+    public float interactibleDetectionDistance = 3.0f;
     // ============================
 
     Ray ray;
@@ -112,7 +112,7 @@ public class PlayerCharacterController : MonoBehaviour {
         m_Actor = GetComponent<Actor> ();
         DebugUtility.HandleErrorIfNullGetComponent<Actor, PlayerCharacterController> (m_Actor, this, gameObject);
 
-        interactionText = GameObject.Find ("Canvas/InteractionText").GetComponent<Text> ();
+        interactionText = GameObject.Find ("InteractionCanvas/InteractionText").GetComponent<Text> ();
 
         m_Controller.enableOverlapRecovery = true;
 
@@ -148,9 +148,9 @@ public class PlayerCharacterController : MonoBehaviour {
         Vector3 origin = playerCamera.transform.position;
         Vector3 direction = playerCamera.transform.forward;
         RaycastHit hit;
-        if (Physics.Raycast (origin, direction, out hit, interactionDistance)) {
-            DoorOpen item = hit.transform.gameObject.GetComponent<DoorOpen> ();
-            if (item != null) {
+        if (Physics.Raycast (origin, direction, out hit, interactibleDetectionDistance)) {
+            Interactible item = hit.transform.gameObject.GetComponent<Interactible> ();
+            if (item != null && Vector3.Distance (hit.transform.position, playerCamera.transform.position) <= item.interactionDistance) {
                 interactionText.text = item.getPublicName ();
                 if (Input.GetKeyDown (KeyCode.E)) {
                     item.TriggerInteraction ();

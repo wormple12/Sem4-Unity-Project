@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DoorOpen : Interactible {
+public class BasicDoor : Interactible {
 
     public string publicName { get; private set; } = "Door";
     void Awake () {

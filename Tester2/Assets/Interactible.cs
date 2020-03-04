@@ -6,6 +6,8 @@ public abstract class Interactible : MonoBehaviour {
 
     private string UI_name = "";
 
+    public float interactionDistance = 1.5f;
+
     public abstract void TriggerInteraction ();
 
     public string getPublicName () {
