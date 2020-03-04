@@ -1,7 +1,23 @@
 using System.Collections;
 using UnityEngine;
 
-public class lb_Bird : MonoBehaviour {
+public class lb_Bird : Interactible {
+
+	// ===================================
+	// INTERACTION
+	// ===================================
+	public string publicName { get; private set; } = "Bird";
+	void Awake () {
+		base.setPublicName (publicName);
+	}
+
+	public override void TriggerInteraction () {
+		Debug.Log ("Birdy activated...");
+	}
+
+	// ===================================
+	// BEHAVIOR (Imported plugin)
+	// ===================================
 	enum birdBehaviors {
 		sing,
 		preen,

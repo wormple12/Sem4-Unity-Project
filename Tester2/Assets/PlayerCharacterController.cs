@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
 [RequireComponent (typeof (CharacterController), typeof (PlayerInputHandler), typeof (AudioSource))]
 public class PlayerCharacterController : MonoBehaviour {
@@ -45,11 +46,17 @@ public class PlayerCharacterController : MonoBehaviour {
 
     // ============================
     // CUSTOM CLIMBING VARIABLES
-    Ray ray;
     [Header ("Climbing")]
     public float climbRayRange = 1f;
     // ============================
 
+    // ============================
+    // CUSTOM INTERACTION VARIABLES
+    [Header ("Interaction")]
+    public float interactibleDetectionDistance = 3.0f;
+    // ============================
+
+    Ray ray;
     public UnityAction<bool> onStanceChanged;
 
     public Vector3 characterVelocity { get; set; }
@@ -75,6 +82,7 @@ public class PlayerCharacterController : MonoBehaviour {
     PlayerWalkController m_WalkController;
     PlayerWeaponsManager m_WeaponsManager;
     Actor m_Actor;
+    Text interactionText;
     public Vector3 m_GroundNormal { get; set; }
     public Vector3 m_LatestImpactSpeed { get; set; }
     public float m_LastTimeJumped { get; set; } = 0f;
@@ -104,6 +112,8 @@ public class PlayerCharacterController : MonoBehaviour {
         m_Actor = GetComponent<Actor> ();
         DebugUtility.HandleErrorIfNullGetComponent<Actor, PlayerCharacterController> (m_Actor, this, gameObject);
 
+        interactionText = GameObject.Find ("InteractionCanvas/InteractionText").GetComponent<Text> ();
+
         m_Controller.enableOverlapRecovery = true;
 
         m_Health.onDie += OnDie;
@@ -129,6 +139,24 @@ public class PlayerCharacterController : MonoBehaviour {
         UpdateCharacterHeight (false);
 
         HandleCharacterMovement ();
+
+        CheckInteraction ();
+    }
+
+    void CheckInteraction () {
+        interactionText.text = "";
+        Vector3 origin = playerCamera.transform.position;
+        Vector3 direction = playerCamera.transform.forward;
+        RaycastHit hit;
+        if (Physics.Raycast (origin, direction, out hit, interactibleDetectionDistance)) {
+            Interactible item = hit.transform.gameObject.GetComponent<Interactible> ();
+            if (item != null && Vector3.Distance (hit.transform.position, playerCamera.transform.position) <= item.interactionDistance) {
+                interactionText.text = item.getPublicName ();
+                if (Input.GetKeyDown (KeyCode.E)) {
+                    item.TriggerInteraction ();
+                }
+            }
+        }
     }
 
     void OnDie () {
