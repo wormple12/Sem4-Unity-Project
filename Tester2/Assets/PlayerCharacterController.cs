@@ -123,6 +123,21 @@ public class PlayerCharacterController : MonoBehaviour {
         UpdateCharacterHeight (true);
     }
 
+    public void TransformTo (Transform target) {
+        transform.position = new Vector3 (target.position.x, target.position.y + 0.5f, target.position.z);
+        Vector3 targetRotation = target.localEulerAngles;
+        transform.localEulerAngles = new Vector3 (0, targetRotation.y, 0);
+
+        m_CameraVerticalAngle = targetRotation.x;
+        // fixing weird issue with vertical rotation where it went above 90 and the camera clamp would break the desired rotation:
+        float remainder = m_CameraVerticalAngle % 90;
+        if (m_CameraVerticalAngle >= 90) {
+            m_CameraVerticalAngle = (-90) + remainder;
+        } else if (m_CameraVerticalAngle <= -90) {
+            m_CameraVerticalAngle = 90 - remainder;
+        }
+    }
+
     void Update () {
         // check for Y kill
         if (!isDead && transform.position.y < killHeight) {

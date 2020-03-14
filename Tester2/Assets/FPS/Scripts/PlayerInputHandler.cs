@@ -13,12 +13,9 @@ public class PlayerInputHandler : MonoBehaviour {
     public bool invertXAxis = false;
 
     GameFlowManager m_GameFlowManager;
-    PlayerCharacterController m_PlayerCharacterController;
     bool m_FireInputWasHeld;
 
     private void Start () {
-        m_PlayerCharacterController = GetComponent<PlayerCharacterController> ();
-        DebugUtility.HandleErrorIfNullGetComponent<PlayerCharacterController, PlayerInputHandler> (m_PlayerCharacterController, this, gameObject);
         m_GameFlowManager = FindObjectOfType<GameFlowManager> ();
         DebugUtility.HandleErrorIfNullFindObject<GameFlowManager, PlayerInputHandler> (m_GameFlowManager, this);
 
