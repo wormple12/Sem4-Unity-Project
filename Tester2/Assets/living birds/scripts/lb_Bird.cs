@@ -24,7 +24,7 @@ public class lb_Bird : Interactible {
 
 	// cleanup! E.g. import file with Important GameObjects instead of many of the Find calls
 	public override void TriggerInteraction () {
-		birdPlayer.GetComponent<PlayerBirdController> ().InitTransform (transform);
+		birdPlayer.GetComponent<PlayerBirdController> ().InitTransform (transform, GetComponent<Rigidbody> ().velocity);
 
 		birdPlayer.SetActive (true);
 		player.SetActive (false);

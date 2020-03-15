@@ -8,7 +8,6 @@ TagManager:
   - lb_groundTarget
   - lb_perchTarget
   - lb_bird
-  - BirdPlayer
   - CritterSpawner
   layers:
   - Default

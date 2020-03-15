@@ -3,19 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent (typeof (CharacterController), typeof (PlayerInputHandler), typeof (AudioSource))]
-public class PlayerWalkController : MonoBehaviour {
+public class PlayerWalkController : PlayerMovementController {
 
     PlayerCharacterController m_PlayerController;
-    CharacterController m_Controller;
-    PlayerInputHandler m_InputHandler;
-
-    [Header ("General")]
-    [Tooltip ("Force applied downward when in the air")]
-    public float gravityDownForce = 14f;
-    [Tooltip ("distance from the bottom of the character controller capsule to test for grounded")]
-    public float groundCheckDistance = 0.05f;
-    [Tooltip ("Physic layers checked to consider the player grounded")]
-    public LayerMask groundCheckLayers = -1;
 
     [Tooltip ("Audio source for footsteps, jump, etc...")]
     public AudioSource audioSource;
@@ -34,8 +24,6 @@ public class PlayerWalkController : MonoBehaviour {
     public float accelerationSpeedInAir = 25f;
     [Tooltip ("Multiplicator for the sprint speed (based on grounded speed)")]
     public float sprintSpeedModifier = 1.5f;
-    [Tooltip ("Height at which the player dies instantly when falling off the map")]
-    public float killHeight = -50f;
 
     [Header ("Jump")]
     [Tooltip ("Force applied upward when jumping")]
@@ -67,177 +55,136 @@ public class PlayerWalkController : MonoBehaviour {
     [Tooltip ("Sound played when taking damage froma fall")]
     public AudioClip fallDamageSFX;
 
-    Vector3 m_CharacterVelocity;
     float m_footstepDistanceCounter;
 
-    const float k_GroundCheckDistanceInAir = 0.07f;
-    const float k_JumpGroundingPreventionTime = 0.2f;
-
-    // Start is called before the first frame update
-    void Start () {
-        // fetch components on the same gameObject
-        m_Controller = GetComponent<CharacterController> ();
-        DebugUtility.HandleErrorIfNullGetComponent<CharacterController, PlayerWalkController> (m_Controller, this, gameObject);
-
+    // Is called before the first frame update
+    override protected void InitController () {
         m_PlayerController = GetComponent<PlayerCharacterController> ();
         DebugUtility.HandleErrorIfNullGetComponent<PlayerCharacterController, PlayerWalkController> (m_PlayerController, this, gameObject);
-
-        m_InputHandler = GetComponent<PlayerInputHandler> ();
-        DebugUtility.HandleErrorIfNullGetComponent<PlayerInputHandler, PlayerWalkController> (m_InputHandler, this, gameObject);
     }
 
-    // Update is called once per frame
-    void Update () {
-
-        bool wasGrounded = m_PlayerController.isGrounded;
-        GroundCheck ();
-
-        // landing
-        if (m_PlayerController.isGrounded && !wasGrounded) {
-            // Fall damage
-            float fallSpeed = -Mathf.Min (m_PlayerController.characterVelocity.y, m_PlayerController.m_LatestImpactSpeed.y);
-            float fallSpeedRatio = (fallSpeed - minSpeedForFallDamage) / (maxSpeedForFallDamage - minSpeedForFallDamage);
-            if (recievesFallDamage && fallSpeedRatio > 0f) {
-                /* float dmgFromFall = Mathf.Lerp (fallDamageAtMinSpeed, fallDamageAtMaxSpeed, fallSpeedRatio);
-                m_PlayerController.m_Health.TakeDamage (dmgFromFall, null); */
-
-                // fall damage SFX
-                audioSource.PlayOneShot (fallDamageSFX);
-            } else {
-                // land SFX
-                audioSource.PlayOneShot (landSFX);
-            }
+    override protected void HandleCharacterMovement () {
+        // character movement handling
+        bool isSprinting = m_InputHandler.GetSprintInputHeld ();
+        if (isSprinting) {
+            isSprinting = m_PlayerController.SetCrouchingState (false, false);
         }
 
-        // character movement handling
-        bool isSprinting = m_InputHandler.GetSprintInputHeld (); {
-            if (isSprinting) {
-                isSprinting = m_PlayerController.SetCrouchingState (false, false);
+        float speedModifier = isSprinting ? sprintSpeedModifier : 1f;
+
+        // converts move input to a worldspace vector based on our character's transform orientation
+        Vector3 worldspaceMoveInput = transform.TransformVector (m_InputHandler.GetMoveInput ());
+
+        // handle grounded movement
+        if (isGrounded) {
+            // calculate the desired velocity from inputs, max speed, and current slope
+            Vector3 targetVelocity = worldspaceMoveInput * maxSpeedOnGround * speedModifier;
+            // reduce speed if crouching by crouch speed ratio
+            if (m_PlayerController.isCrouching)
+                targetVelocity *= maxSpeedCrouchedRatio;
+            targetVelocity = GetDirectionReorientedOnSlope (targetVelocity.normalized, m_GroundNormal) * targetVelocity.magnitude;
+
+            // smoothly interpolate between our current velocity and the target velocity based on acceleration speed
+            characterVelocity = Vector3.Lerp (characterVelocity, targetVelocity, movementSharpnessOnGround * Time.deltaTime);
+
+            // jumping
+            if (isGrounded && m_InputHandler.GetJumpInputDown ()) {
+                // force the crouch state to false
+                if (m_PlayerController.SetCrouchingState (false, false)) {
+                    // start by canceling out the vertical component of our velocity
+                    characterVelocity = new Vector3 (characterVelocity.x, 0f, characterVelocity.z);
+
+                    // then, add the jumpSpeed value upwards
+                    characterVelocity += Vector3.up * jumpForce;
+
+                    // play sound
+                    audioSource.PlayOneShot (jumpSFX);
+
+                    // remember last time we jumped because we need to prevent snapping to ground for a short time
+                    m_LastTimeJumped = Time.time;
+                    hasJumpedThisFrame = true;
+
+                    // Force grounding to false
+                    isGrounded = false;
+                    m_GroundNormal = Vector3.up;
+                }
             }
 
-            float speedModifier = isSprinting ? sprintSpeedModifier : 1f;
-
-            // converts move input to a worldspace vector based on our character's transform orientation
-            Vector3 worldspaceMoveInput = transform.TransformVector (m_InputHandler.GetMoveInput ());
-
-            // handle grounded movement
-            if (m_PlayerController.isGrounded) {
-                // calculate the desired velocity from inputs, max speed, and current slope
-                Vector3 targetVelocity = worldspaceMoveInput * maxSpeedOnGround * speedModifier;
-                // reduce speed if crouching by crouch speed ratio
-                if (m_PlayerController.isCrouching)
-                    targetVelocity *= maxSpeedCrouchedRatio;
-                targetVelocity = GetDirectionReorientedOnSlope (targetVelocity.normalized, m_PlayerController.m_GroundNormal) * targetVelocity.magnitude;
-
-                // smoothly interpolate between our current velocity and the target velocity based on acceleration speed
-                m_PlayerController.characterVelocity = Vector3.Lerp (m_PlayerController.characterVelocity, targetVelocity, movementSharpnessOnGround * Time.deltaTime);
-
-                // jumping
-                if (m_PlayerController.isGrounded && m_InputHandler.GetJumpInputDown ()) {
-                    // force the crouch state to false
-                    if (m_PlayerController.SetCrouchingState (false, false)) {
-                        // start by canceling out the vertical component of our velocity
-                        m_PlayerController.characterVelocity = new Vector3 (m_PlayerController.characterVelocity.x, 0f, m_PlayerController.characterVelocity.z);
-
-                        // then, add the jumpSpeed value upwards
-                        m_PlayerController.characterVelocity += Vector3.up * jumpForce;
-
-                        // play sound
-                        audioSource.PlayOneShot (jumpSFX);
-
-                        // remember last time we jumped because we need to prevent snapping to ground for a short time
-                        m_PlayerController.m_LastTimeJumped = Time.time;
-                        m_PlayerController.hasJumpedThisFrame = true;
-
-                        // Force grounding to false
-                        m_PlayerController.isGrounded = false;
-                        m_PlayerController.m_GroundNormal = Vector3.up;
-                    }
-                }
-
-                // footsteps sound
-                float chosenFootstepSFXFrequency = (isSprinting ? footstepSFXFrequencyWhileSprinting : footstepSFXFrequency);
-                if (m_footstepDistanceCounter >= 1f / chosenFootstepSFXFrequency) {
-                    m_footstepDistanceCounter = 0f;
-                    audioSource.PlayOneShot (footstepSFX);
-                }
-
-                // keep track of distance traveled for footsteps sound
-                m_footstepDistanceCounter += m_PlayerController.characterVelocity.magnitude * Time.deltaTime;
+            // footsteps sound
+            float chosenFootstepSFXFrequency = (isSprinting ? footstepSFXFrequencyWhileSprinting : footstepSFXFrequency);
+            if (m_footstepDistanceCounter >= 1f / chosenFootstepSFXFrequency) {
+                m_footstepDistanceCounter = 0f;
+                audioSource.PlayOneShot (footstepSFX);
             }
-            // handle air movement
-            else {
-                if (!m_PlayerController.isClimbing) {
-                    // add air acceleration
-                    m_PlayerController.characterVelocity += worldspaceMoveInput * accelerationSpeedInAir * Time.deltaTime;
 
-                    // limit air speed to a maximum, but only horizontally
-                    float verticalVelocity = m_PlayerController.characterVelocity.y;
-                    Vector3 horizontalVelocity = Vector3.ProjectOnPlane (m_PlayerController.characterVelocity, Vector3.up);
-                    horizontalVelocity = Vector3.ClampMagnitude (horizontalVelocity, maxSpeedInAir * speedModifier);
-                    m_PlayerController.characterVelocity = horizontalVelocity + (Vector3.up * verticalVelocity);
+            // keep track of distance traveled for footsteps sound
+            m_footstepDistanceCounter += characterVelocity.magnitude * Time.deltaTime;
+        }
+        // handle air movement
+        else {
+            if (!m_PlayerController.isClimbing) {
+                // add air acceleration
+                characterVelocity += worldspaceMoveInput * accelerationSpeedInAir * Time.deltaTime;
 
-                    // apply the gravity to the velocity
-                    m_PlayerController.characterVelocity += Vector3.down * gravityDownForce * Time.deltaTime;
-                }
+                // limit air speed to a maximum, but only horizontally
+                float verticalVelocity = characterVelocity.y;
+                Vector3 horizontalVelocity = Vector3.ProjectOnPlane (characterVelocity, Vector3.up);
+                horizontalVelocity = Vector3.ClampMagnitude (horizontalVelocity, maxSpeedInAir * speedModifier);
+                characterVelocity = horizontalVelocity + (Vector3.up * verticalVelocity);
+
+                // apply the gravity to the velocity
+                characterVelocity += Vector3.down * gravityDownForce * Time.deltaTime;
             }
         }
 
         // apply the final calculated velocity value as a character movement
-        Vector3 capsuleBottomBeforeMove = m_PlayerController.GetCapsuleBottomHemisphere ();
-        Vector3 capsuleTopBeforeMove = m_PlayerController.GetCapsuleTopHemisphere (m_Controller.height);
+        Vector3 capsuleBottomBeforeMove = GetCapsuleBottomHemisphere ();
+        Vector3 capsuleTopBeforeMove = GetCapsuleTopHemisphere (m_Controller.height);
         if (!m_PlayerController.isClimbing) {
-            m_Controller.Move (m_PlayerController.characterVelocity * Time.deltaTime);
+            m_Controller.Move (characterVelocity * Time.deltaTime);
         }
 
         // detect obstructions to adjust velocity accordingly
-        m_PlayerController.m_LatestImpactSpeed = Vector3.zero;
-        if (Physics.CapsuleCast (capsuleBottomBeforeMove, capsuleTopBeforeMove, m_Controller.radius, m_PlayerController.characterVelocity.normalized, out RaycastHit hit, m_PlayerController.characterVelocity.magnitude * Time.deltaTime, -1, QueryTriggerInteraction.Ignore)) {
+        m_LatestImpactSpeed = Vector3.zero;
+        if (Physics.CapsuleCast (capsuleBottomBeforeMove, capsuleTopBeforeMove, m_Controller.radius, characterVelocity.normalized, out RaycastHit hit, characterVelocity.magnitude * Time.deltaTime, -1, QueryTriggerInteraction.Ignore)) {
             // We remember the last impact speed because the fall damage logic might need it
-            m_PlayerController.m_LatestImpactSpeed = m_PlayerController.characterVelocity;
+            m_LatestImpactSpeed = characterVelocity;
 
-            m_PlayerController.characterVelocity = Vector3.ProjectOnPlane (m_PlayerController.characterVelocity, hit.normal);
+            characterVelocity = Vector3.ProjectOnPlane (characterVelocity, hit.normal);
         }
     }
 
-    void GroundCheck () {
-        // Make sure that the ground check distance while already in air is very small, to prevent suddenly snapping to ground
-        float chosenGroundCheckDistance = m_PlayerController.isGrounded ? (m_Controller.skinWidth + groundCheckDistance) : k_GroundCheckDistanceInAir;
+    override protected void HandleLanding () {
+        // Fall damage
+        float fallSpeed = -Mathf.Min (characterVelocity.y, m_LatestImpactSpeed.y);
+        float fallSpeedRatio = (fallSpeed - minSpeedForFallDamage) / (maxSpeedForFallDamage - minSpeedForFallDamage);
+        if (recievesFallDamage && fallSpeedRatio > 0f) {
+            /* float dmgFromFall = Mathf.Lerp (fallDamageAtMinSpeed, fallDamageAtMaxSpeed, fallSpeedRatio);
+            m_PlayerController.m_Health.TakeDamage (dmgFromFall, null); */
 
-        // reset values before the ground check
-        m_PlayerController.isGrounded = false;
-        m_PlayerController.m_GroundNormal = Vector3.up;
-
-        // only try to detect ground if it's been a short amount of time since last jump; otherwise we may snap to the ground instantly after we try jumping
-        if (Time.time >= m_PlayerController.m_LastTimeJumped + k_JumpGroundingPreventionTime) {
-            // if we're grounded, collect info about the ground normal with a downward capsule cast representing our character capsule
-            if (Physics.CapsuleCast (m_PlayerController.GetCapsuleBottomHemisphere (), m_PlayerController.GetCapsuleTopHemisphere (m_Controller.height), m_Controller.radius, Vector3.down, out RaycastHit hit, chosenGroundCheckDistance, groundCheckLayers, QueryTriggerInteraction.Ignore)) {
-                // storing the upward direction for the surface found
-                m_PlayerController.m_GroundNormal = hit.normal;
-
-                // Only consider this a valid ground hit if the ground normal goes in the same direction as the character up
-                // and if the slope angle is lower than the character controller's limit
-                if (Vector3.Dot (hit.normal, transform.up) > 0f &&
-                    IsNormalUnderSlopeLimit (m_PlayerController.m_GroundNormal)) {
-                    m_PlayerController.isGrounded = true;
-
-                    // handle snapping to the ground
-                    if (hit.distance > m_Controller.skinWidth) {
-                        m_Controller.Move (Vector3.down * hit.distance);
-                    }
-                }
-            }
+            // fall damage SFX
+            audioSource.PlayOneShot (fallDamageSFX);
+        } else {
+            // land SFX
+            audioSource.PlayOneShot (landSFX);
         }
     }
 
-    // Returns true if the slope angle represented by the given normal is under the slope angle limit of the character controller
-    bool IsNormalUnderSlopeLimit (Vector3 normal) {
-        return Vector3.Angle (transform.up, normal) <= m_Controller.slopeLimit;
-    }
-
-    // Gets a reoriented direction that is tangent to a given slope
-    public Vector3 GetDirectionReorientedOnSlope (Vector3 direction, Vector3 slopeNormal) {
-        Vector3 directionRight = Vector3.Cross (direction, transform.up);
-        return Vector3.Cross (slopeNormal, directionRight).normalized;
+    override protected void UpdateCharacterHeight (bool force) {
+        // Update height instantly
+        if (force) {
+            m_Controller.height = m_TargetCharacterHeight;
+            m_Controller.center = Vector3.up * m_Controller.height * 0.5f;
+            playerCamera.transform.localPosition = Vector3.up * m_TargetCharacterHeight * cameraHeightRatio;
+            m_PlayerController.m_Actor.aimPoint.transform.localPosition = m_Controller.center;
+        }
+        // Update smooth height
+        else if (m_Controller.height != m_TargetCharacterHeight) {
+            // resize the capsule and adjust camera position
+            m_Controller.height = Mathf.Lerp (m_Controller.height, m_TargetCharacterHeight, m_PlayerController.crouchingSharpness * Time.deltaTime);
+            m_Controller.center = Vector3.up * m_Controller.height * 0.5f;
+            playerCamera.transform.localPosition = Vector3.Lerp (playerCamera.transform.localPosition, Vector3.up * m_TargetCharacterHeight * cameraHeightRatio, m_PlayerController.crouchingSharpness * Time.deltaTime);
+            m_PlayerController.m_Actor.aimPoint.transform.localPosition = m_Controller.center;
+        }
     }
 }
