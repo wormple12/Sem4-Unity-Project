@@ -14,7 +14,7 @@ public class PlayerBirdController : PlayerMovementController {
     public float horisontalRotationSpeed = 100f;
 
     float m_CameraVerticalAngle = 0f;
-    //float m_CameraHorisontalAngle = 0f;
+    float m_CameraHorisontalAngle = 0f;
 
     [Header ("Flying")]
     [Tooltip ("Force applied upward when \"jumping\"")]
@@ -23,6 +23,8 @@ public class PlayerBirdController : PlayerMovementController {
     public float maxSpeedInAir = 6f;
     [Tooltip ("Acceleration speed when in the air")]
     public float accelerationSpeedInAir = 25f;
+    [Tooltip ("Minimum time between \"jumps\"")]
+    public int timeBetweenJumps = 10;
 
     [Header ("Ground Movement")]
     [Tooltip ("Height of character when on ground")]
@@ -42,24 +44,26 @@ public class PlayerBirdController : PlayerMovementController {
 
     // cleanup! E.g. import file with Important GameObjects instead of many of the Find calls
     private GameObject player;
-    private GameObject birdPlayer;
-
-    void Awake () {
-        birdPlayer = GameObject.Find ("BirdPlayer");
-        player = birdPlayer.transform.parent.transform.Find ("Player").gameObject;
-    }
+    private GameObject birdCamMaster;
 
     public void InitTransform (Transform bird, Vector3 velocityAtTransformation) {
-        transform.position = new Vector3 (bird.position.x, bird.position.y + 0.5f, bird.position.z);
+        transform.position = new Vector3 (bird.position.x, bird.position.y + 0.3f, bird.position.z);
         Vector3 crowRotation = bird.localEulerAngles;
 
-        // fixing weird issue with vertical rotation where it went above 90 and the camera clamp would break the desired rotation:
-        float m_CameraHorisontalAngle = crowRotation.y;
-        // see UpdateCameraRotation for further explanation
+        m_CameraHorisontalAngle = crowRotation.y;
         transform.localEulerAngles = new Vector3 (0, m_CameraHorisontalAngle, 0);
-        m_CameraVerticalAngle = MyGameUtils.LimitVectorAngleTo90 (crowRotation.x); // transforms with first update
+        // fixing weird issue with vertical rotation where it went above 90 and the camera clamp would break the desired rotation:
+        // see UpdateCameraRotation for further explanation
+        m_CameraVerticalAngle = MyGameUtils.LimitVectorAngleTo90 (crowRotation.x);
+
+        birdCamMaster = transform.parent.gameObject;
+        player = birdCamMaster.transform.parent.transform.Find ("Player").gameObject;
+        birdCamMaster.SetActive (true);
+        player.SetActive (false);
 
         characterVelocity = velocityAtTransformation;
+
+        UpdateSpawnPoints ();
     }
 
     // Is called before the first frame update
@@ -73,7 +77,6 @@ public class PlayerBirdController : PlayerMovementController {
     }
 
     override protected void HandleLastUpdate () {
-        // SHIFTING BACK TO HUMAN FORM
         if (Input.GetKeyDown (KeyCode.E)) {
             RevertToHuman ();
         }
@@ -82,20 +85,17 @@ public class PlayerBirdController : PlayerMovementController {
     float camGroundingIntensity = 0.01f;
 
     private void UpdateCameraRotation () {
-        // horizontal character rotation
-        // rotate the transform with the input speed around its local Y axis
-        transform.Rotate (new Vector3 (0f, (m_InputHandler.GetLookInputsHorizontal () * horisontalRotationSpeed), 0f), Space.Self);
-
-        // vertical camera rotation
-        // add vertical inputs to the camera's vertical angle
+        // vertical rotation
         m_CameraVerticalAngle += m_InputHandler.GetLookInputsVertical () * verticalRotationSpeed;
-        // limit the camera's vertical angle to min/max
+        // limit the vertical angle to min/max
         m_CameraVerticalAngle = isGrounded ?
             Mathf.Lerp (m_CameraVerticalAngle, 10f, camGroundingIntensity) :
             Mathf.Clamp (m_CameraVerticalAngle, -89f, 89f);
         camGroundingIntensity = isGrounded ? Mathf.Lerp (camGroundingIntensity, 1f, 0.03f) : 0.01f;
-        // apply the vertical angle as a local rotation to the camera transform along its right axis (makes it pivot up and down)
-        playerCamera.transform.localEulerAngles = new Vector3 (m_CameraVerticalAngle, 0, 0);
+
+        // horizontal rotation
+        m_CameraHorisontalAngle += m_InputHandler.GetLookInputsHorizontal () * horisontalRotationSpeed;
+        transform.localEulerAngles = new Vector3 (m_CameraVerticalAngle, m_CameraHorisontalAngle, 0);
     }
 
     override protected void HandleCharacterMovement () {
@@ -155,6 +155,8 @@ public class PlayerBirdController : PlayerMovementController {
         }
     }
 
+    long timeSinceLastJump = 0;
+
     private void HandleAirMovement (Vector3 worldspaceMoveInput) {
         // add air acceleration
         characterVelocity += worldspaceMoveInput * accelerationSpeedInAir * Time.deltaTime;
@@ -165,21 +167,62 @@ public class PlayerBirdController : PlayerMovementController {
         horizontalVelocity = Vector3.ClampMagnitude (horizontalVelocity, maxSpeedInAir);
         characterVelocity = horizontalVelocity + (Vector3.up * verticalVelocity);
 
-        // apply the gravity to the velocity
-        characterVelocity += Vector3.down * gravityDownForce * Time.deltaTime;
+        // flying
+        if (timeSinceLastJump >= timeBetweenJumps && m_InputHandler.GetJumpInputDown ()) {
+
+            // then, add the jumpSpeed value upwards
+            characterVelocity += Vector3.up * jumpForce * 1.5f;
+
+            // play sound
+            audioSource.PlayOneShot (wingSFX);
+
+            // remember last time we jumped because we need to prevent snapping to ground for a short time
+            m_LastTimeJumped = Time.time;
+            hasJumpedThisFrame = true;
+            timeSinceLastJump = 0;
+        } else {
+            timeSinceLastJump += 1;
+
+            // apply the gravity to the velocity
+            if (Input.GetKey (KeyCode.Space)) {
+                characterVelocity += Vector3.down * gravityDownForce * 0.5f * Time.deltaTime;
+            } else {
+                characterVelocity += Vector3.down * gravityDownForce * Time.deltaTime;
+            }
+        }
     }
 
     private void RevertToHuman () {
         player.SetActive (true);
-        birdPlayer.SetActive (false);
+        birdCamMaster.SetActive (false);
 
         player.GetComponent<PlayerCharacterController> ()
             .TransformTo (transform.position, new Vector3 (playerCamera.transform.localEulerAngles.x, transform.localEulerAngles.y, 0));
 
+        UpdateSpawnPoints ();
+    }
+
+    override protected void UpdateCharacterHeight (bool force) {
+        // Update height instantly
+        if (force) {
+            m_Controller.height = m_TargetCharacterHeight;
+            m_Controller.center = Vector3.up * m_Controller.height * 0.33333f;
+            //transform.localPosition += Vector3.up * m_TargetCharacterHeight * cameraHeightRatio;
+        }
+        // Update smooth height
+        else if (m_Controller.height != m_TargetCharacterHeight) {
+            // resize the capsule and adjust camera position
+            m_Controller.height = Mathf.Lerp (m_Controller.height, m_TargetCharacterHeight, 10f * Time.deltaTime); // 10f: what was earlier "crouching sharpness", see below as well
+            m_Controller.center = Vector3.up * m_Controller.height * 0.33333f;
+            transform.localPosition = Vector3.Lerp (transform.localPosition, Vector3.up * m_TargetCharacterHeight * cameraHeightRatio, 10f * Time.deltaTime);
+        }
+    }
+
+    private void UpdateSpawnPoints () {
         GameObject[] critterSpawners = GameObject.FindGameObjectsWithTag ("CritterSpawner");
-        Camera normalCamera = GameObject.FindWithTag ("MainCamera").GetComponent<Camera> ();
+        Camera newCamera = GameObject.FindWithTag ("MainCamera").GetComponent<Camera> ();
         foreach (GameObject spawner in critterSpawners) {
-            spawner.GetComponent<lb_BirdController> ().ChangeCamera (normalCamera);
+            spawner.GetComponent<lb_BirdController> ().ChangeCamera (newCamera);
         }
     }
 }

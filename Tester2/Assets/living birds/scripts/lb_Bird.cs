@@ -16,26 +16,17 @@ public class lb_Bird : Interactible {
 	void Awake () {
 		base.setPublicName (publicName);
 
+		// cleanup! E.g. import file with Important GameObjects instead of many of the Find calls
 		player = GameObject.Find ("Player");
-		birdPlayer = player.transform.parent.transform.Find ("BirdPlayer").gameObject;
+		birdPlayer = player.transform.parent.transform.Find ("BirdCamMaster").Find ("BirdPlayer").gameObject;
 	}
 
 	void Start () { }
 
-	// cleanup! E.g. import file with Important GameObjects instead of many of the Find calls
 	public override void TriggerInteraction () {
 		birdPlayer.GetComponent<PlayerBirdController> ().InitTransform (transform, GetComponent<Rigidbody> ().velocity);
 
-		birdPlayer.SetActive (true);
-		player.SetActive (false);
-
 		GameObject.Find ("InteractionCanvas/InteractionText").GetComponent<Text> ().text = "";
-
-		GameObject[] critterSpawners = GameObject.FindGameObjectsWithTag ("CritterSpawner");
-		Camera birdCamera = GameObject.FindWithTag ("MainCamera").GetComponent<Camera> ();
-		foreach (GameObject spawner in critterSpawners) {
-			spawner.GetComponent<lb_BirdController> ().ChangeCamera (birdCamera);
-		}
 
 		controller.Unspawn (gameObject);
 	}
