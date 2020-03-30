@@ -8,6 +8,10 @@ public class PlayerBirdController : PlayerMovementController {
     [Header ("References")]
     [Tooltip ("Audio source for them hot wings...")]
     public AudioSource audioSource;
+    [Tooltip ("Switch to this camera when flying")]
+    public GameObject flyCam;
+    [Tooltip ("Reference to non-bird player character")]
+    public GameObject player;
 
     [Header ("Rotation")]
     public float verticalRotationSpeed = 70f;
@@ -42,9 +46,16 @@ public class PlayerBirdController : PlayerMovementController {
     [Tooltip ("Sound played when hitting a surface")]
     public AudioClip damageSFX; */
 
-    // cleanup! E.g. import file with Important GameObjects instead of many of the Find calls
-    private GameObject player;
     private GameObject birdCamMaster;
+
+    private Animator anim;
+    //hash variables for the animation states and animation properties
+    private int idleAnimationHash, singAnimationHash, ruffleAnimationHash, preenAnimationHash, peckAnimationHash, hopForwardAnimationHash,
+    hopBackwardAnimationHash, hopLeftAnimationHash, hopRightAnimationHash, worriedAnimationHash, landingAnimationHash, flyAnimationHash,
+    hopIntHash, flyingBoolHash, peckBoolHash, ruffleBoolHash, preenBoolHash, landingBoolHash, singTriggerHash, flyingDirectionHash, dieTriggerHash;
+    //int perchedBoolHash;
+    //int worriedBoolHash;
+    private bool isFlying = false;
 
     public void InitTransform (Transform bird, Vector3 velocityAtTransformation) {
         transform.position = new Vector3 (bird.position.x, bird.position.y + 0.3f, bird.position.z);
@@ -57,7 +68,6 @@ public class PlayerBirdController : PlayerMovementController {
         m_CameraVerticalAngle = MyGameUtils.LimitVectorAngleTo90 (crowRotation.x);
 
         birdCamMaster = transform.parent.gameObject;
-        player = birdCamMaster.transform.parent.transform.Find ("Player").gameObject;
         birdCamMaster.SetActive (true);
         player.SetActive (false);
 
@@ -69,6 +79,21 @@ public class PlayerBirdController : PlayerMovementController {
     // Is called before the first frame update
     override protected void InitController () {
         m_TargetCharacterHeight = capsuleHeight;
+
+        anim = transform.Find ("lb_crow").gameObject.GetComponent<Animator> ();
+        idleAnimationHash = Animator.StringToHash ("Base Layer.Idle");
+        flyAnimationHash = Animator.StringToHash ("Base Layer.fly");
+        hopIntHash = Animator.StringToHash ("hop");
+        flyingBoolHash = Animator.StringToHash ("flying");
+        peckBoolHash = Animator.StringToHash ("peck");
+        ruffleBoolHash = Animator.StringToHash ("ruffle");
+        preenBoolHash = Animator.StringToHash ("preen");
+        landingBoolHash = Animator.StringToHash ("landing");
+        singTriggerHash = Animator.StringToHash ("sing");
+        flyingDirectionHash = Animator.StringToHash ("flyingDirectionX");
+        dieTriggerHash = Animator.StringToHash ("die");
+        anim.SetFloat ("IdleAgitated", .5f);
+        anim.applyRootMotion = false;
     }
 
     // Update is called once per frame
@@ -124,6 +149,8 @@ public class PlayerBirdController : PlayerMovementController {
     }
 
     private void HandleGroundMovement (Vector3 worldspaceMoveInput) {
+        if (isFlying) { isFlying = false; flyCam.SetActive (false); } // switch cameras
+
         // calculate the desired velocity from inputs, max speed, and current slope
         Vector3 targetVelocity = worldspaceMoveInput * maxSpeedOnGround;
 
@@ -153,11 +180,40 @@ public class PlayerBirdController : PlayerMovementController {
             isGrounded = false;
             m_GroundNormal = Vector3.up;
         }
+
+        // animation
+        anim.SetFloat (flyingDirectionHash, 0);
+        anim.SetBool (flyingBoolHash, false);
+        anim.SetBool (landingBoolHash, false);
+
+        // ground behavior
+        bool idle = anim.GetCurrentAnimatorStateInfo (0).nameHash == idleAnimationHash;
+        if (idle) {
+            //the bird is in the idle animation, lets randomly choose a behavior every 3 seconds
+            if (Random.value < Time.deltaTime * .33) {
+                //bird will display a behavior
+                //idle = false;
+                float rand = Random.value;
+                if (rand < .3) {
+                    anim.SetTrigger (singTriggerHash);
+                } else if (rand < .6) {
+                    anim.SetTrigger (preenBoolHash);
+                } else if (rand < .8) {
+                    anim.SetTrigger (ruffleBoolHash);
+                } else {
+                    anim.SetTrigger (singTriggerHash);
+                }
+                //lets alter the agitation level of the brid so it uses a different mix of idle animation next time
+                anim.SetFloat ("IdleAgitated", Random.value);
+            }
+        }
     }
 
     long timeSinceLastJump = 0;
 
     private void HandleAirMovement (Vector3 worldspaceMoveInput) {
+        if (!isFlying) { isFlying = true; flyCam.SetActive (true); } // switch cameras
+
         // add air acceleration
         characterVelocity += worldspaceMoveInput * accelerationSpeedInAir * Time.deltaTime;
 
@@ -190,6 +246,12 @@ public class PlayerBirdController : PlayerMovementController {
                 characterVelocity += Vector3.down * gravityDownForce * Time.deltaTime;
             }
         }
+
+        // animation
+        // flying
+        anim.SetBool (flyingBoolHash, true);
+        anim.SetBool (landingBoolHash, false);
+        anim.SetFloat (flyingDirectionHash, Vector3.Dot (transform.forward, Vector3.up));
     }
 
     private void RevertToHuman () {
