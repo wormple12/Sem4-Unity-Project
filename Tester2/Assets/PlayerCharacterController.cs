@@ -2,13 +2,11 @@
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-[RequireComponent (typeof (CharacterController), typeof (PlayerInputHandler), typeof (AudioSource))]
+[RequireComponent (typeof (CharacterController), typeof (PlayerInputHandler))]
 public class PlayerCharacterController : MonoBehaviour {
     [Header ("References")]
     [Tooltip ("Reference to the main camera used for the player")]
     public Camera playerCamera;
-    [Tooltip ("Audio source for footsteps, jump, etc...")]
-    public AudioSource audioSource;
 
     [Header ("Rotation")]
     [Tooltip ("Rotation speed for moving the camera")]
@@ -17,32 +15,17 @@ public class PlayerCharacterController : MonoBehaviour {
     [Tooltip ("Rotation speed multiplier when aiming")]
     public float aimingRotationMultiplier = 0.4f;
 
-    [Header ("Movement")]
-    [Tooltip ("Max movement speed when grounded (when not sprinting)")]
-    public float maxSpeedOnGround = 10f;
-    [Tooltip ("Sharpness for the movement when grounded, a low value will make the player accelerate and decelerate slowly, a high value will do the opposite")]
-    public float movementSharpnessOnGround = 15;
-    [Tooltip ("Max movement speed when crouching")]
-    [Range (0, 1)]
-    public float maxSpeedCrouchedRatio = 0.5f;
-    [Tooltip ("Max movement speed when not grounded")]
-    public float maxSpeedInAir = 10f;
-    [Tooltip ("Acceleration speed when in the air")]
-    public float accelerationSpeedInAir = 25f;
-    [Tooltip ("Multiplicator for the sprint speed (based on grounded speed)")]
-    public float sprintSpeedModifier = 2f;
-    [Tooltip ("Height at which the player dies instantly when falling off the map")]
-    public float killHeight = -50f;
-
     [Header ("Stance")]
-    [Tooltip ("Ratio (0-1) of the character height where the camera will be at")]
-    public float cameraHeightRatio = 0.9f;
     [Tooltip ("Height of character when standing")]
     public float capsuleHeightStanding = 1.8f;
     [Tooltip ("Height of character when crouching")]
     public float capsuleHeightCrouching = 0.9f;
     [Tooltip ("Speed of crouching transitions")]
     public float crouchingSharpness = 10f;
+
+    [Header ("Other")]
+    [Tooltip ("Height at which the player dies instantly when falling off the map")]
+    public float killHeight = -50f;
 
     // ============================
     // CUSTOM CLIMBING VARIABLES
@@ -56,12 +39,18 @@ public class PlayerCharacterController : MonoBehaviour {
     public float interactibleDetectionDistance = 3.0f;
     // ============================
 
+    public Health m_Health { get; set; }
+    PlayerInputHandler m_InputHandler;
+    CharacterController m_Controller;
+    PlayerClimbController m_ClimbController;
+    PlayerWalkController m_WalkController;
+    PlayerWeaponsManager m_WeaponsManager;
+    public Actor m_Actor { get; private set; }
+    Text interactionText;
+
     Ray ray;
     public UnityAction<bool> onStanceChanged;
 
-    public Vector3 characterVelocity { get; set; }
-    public bool isGrounded { get; set; }
-    public bool hasJumpedThisFrame { get; set; }
     public bool isDead { get; private set; }
     public bool isCrouching { get; private set; }
     public bool isClimbing { get; private set; }
@@ -75,19 +64,7 @@ public class PlayerCharacterController : MonoBehaviour {
         }
     }
 
-    public Health m_Health { get; set; }
-    PlayerInputHandler m_InputHandler;
-    CharacterController m_Controller;
-    PlayerClimbController m_ClimbController;
-    PlayerWalkController m_WalkController;
-    PlayerWeaponsManager m_WeaponsManager;
-    Actor m_Actor;
-    Text interactionText;
-    public Vector3 m_GroundNormal { get; set; }
-    public Vector3 m_LatestImpactSpeed { get; set; }
-    public float m_LastTimeJumped { get; set; } = 0f;
     float m_CameraVerticalAngle = 0f;
-    float m_TargetCharacterHeight;
 
     void Start () {
         // fetch components on the same gameObject
@@ -114,13 +91,21 @@ public class PlayerCharacterController : MonoBehaviour {
 
         interactionText = GameObject.Find ("InteractionCanvas/InteractionText").GetComponent<Text> ();
 
-        m_Controller.enableOverlapRecovery = true;
-
         m_Health.onDie += OnDie;
 
         // force the crouch state to false when starting
         SetCrouchingState (false, true);
-        UpdateCharacterHeight (true);
+    }
+
+    public void TransformTo (Vector3 targetPos, Vector3 targetRotation) {
+        transform.position = new Vector3 (targetPos.x, targetPos.y + 0.5f, targetPos.z);
+        transform.localEulerAngles = new Vector3 (0, targetRotation.y, 0);
+
+        // fixing weird issue with vertical rotation where it went above 90 and the camera clamp would break the desired rotation:
+        m_CameraVerticalAngle = MyGameUtils.LimitVectorAngleTo90 (targetRotation.x);
+
+        playerCamera.transform.localEulerAngles = new Vector3 (m_CameraVerticalAngle, 0, 0);
+        transform.position += playerCamera.transform.forward * 2;
     }
 
     void Update () {
@@ -129,21 +114,17 @@ public class PlayerCharacterController : MonoBehaviour {
             m_Health.Kill ();
         }
 
-        hasJumpedThisFrame = false;
-
         // crouching
         if (m_InputHandler.GetCrouchInputDown ()) {
             SetCrouchingState (!isCrouching, false);
         }
 
-        UpdateCharacterHeight (false);
-
-        HandleCharacterMovement ();
-
+        UpdateCameraRotation ();
+        HandleControllerSwitch ();
         CheckInteraction ();
     }
 
-    void CheckInteraction () {
+    private void CheckInteraction () {
         interactionText.text = "";
         Vector3 origin = playerCamera.transform.position;
         Vector3 direction = playerCamera.transform.forward;
@@ -159,33 +140,27 @@ public class PlayerCharacterController : MonoBehaviour {
         }
     }
 
-    void OnDie () {
+    private void OnDie () {
         isDead = true;
 
         // Tell the weapons manager to switch to a non-existing weapon in order to lower the weapon
         m_WeaponsManager.SwitchToWeaponIndex (-1, true);
     }
 
-    void HandleCharacterMovement () {
+    private void UpdateCameraRotation () {
         // horizontal character rotation
-        {
-            // rotate the transform with the input speed around its local Y axis
-            transform.Rotate (new Vector3 (0f, (m_InputHandler.GetLookInputsHorizontal () * rotationSpeed * RotationMultiplier), 0f), Space.Self);
-        }
-
+        // rotate the transform with the input speed around its local Y axis
+        transform.Rotate (new Vector3 (0f, (m_InputHandler.GetLookInputsHorizontal () * rotationSpeed * RotationMultiplier), 0f), Space.Self);
         // vertical camera rotation
-        {
-            // add vertical inputs to the camera's vertical angle
-            m_CameraVerticalAngle += m_InputHandler.GetLookInputsVertical () * rotationSpeed * RotationMultiplier;
+        // add vertical inputs to the camera's vertical angle
+        m_CameraVerticalAngle += m_InputHandler.GetLookInputsVertical () * rotationSpeed * RotationMultiplier;
+        // limit the camera's vertical angle to min/max
+        m_CameraVerticalAngle = Mathf.Clamp (m_CameraVerticalAngle, -89f, 89f);
+        // apply the vertical angle as a local rotation to the camera transform along its right axis (makes it pivot up and down)
+        playerCamera.transform.localEulerAngles = new Vector3 (m_CameraVerticalAngle, 0, 0);
+    }
 
-            // limit the camera's vertical angle to min/max
-            m_CameraVerticalAngle = Mathf.Clamp (m_CameraVerticalAngle, -89f, 89f);
-
-            // apply the vertical angle as a local rotation to the camera transform along its right axis (makes it pivot up and down)
-            playerCamera.transform.localEulerAngles = new Vector3 (m_CameraVerticalAngle, 0, 0);
-        }
-
-        // =========================
+    private void HandleControllerSwitch () {
         // CLIMBING HANDLING
         if (!isClimbing) {
             if (Input.GetKeyDown (KeyCode.Mouse1)) {
@@ -203,38 +178,8 @@ public class PlayerCharacterController : MonoBehaviour {
                 isClimbing = false;
                 m_ClimbController.enabled = false;
                 m_WalkController.enabled = true;
-                characterVelocity = Vector3.up * 5f;
+                m_WalkController.characterVelocity = Vector3.up * 5f;
             }
-        }
-        // =========================
-
-    }
-
-    // Gets the center point of the bottom hemisphere of the character controller capsule    
-    public Vector3 GetCapsuleBottomHemisphere () {
-        return transform.position + (transform.up * m_Controller.radius);
-    }
-
-    // Gets the center point of the top hemisphere of the character controller capsule    
-    public Vector3 GetCapsuleTopHemisphere (float atHeight) {
-        return transform.position + (transform.up * (atHeight - m_Controller.radius));
-    }
-
-    void UpdateCharacterHeight (bool force) {
-        // Update height instantly
-        if (force) {
-            m_Controller.height = m_TargetCharacterHeight;
-            m_Controller.center = Vector3.up * m_Controller.height * 0.5f;
-            playerCamera.transform.localPosition = Vector3.up * m_TargetCharacterHeight * cameraHeightRatio;
-            m_Actor.aimPoint.transform.localPosition = m_Controller.center;
-        }
-        // Update smooth height
-        else if (m_Controller.height != m_TargetCharacterHeight) {
-            // resize the capsule and adjust camera position
-            m_Controller.height = Mathf.Lerp (m_Controller.height, m_TargetCharacterHeight, crouchingSharpness * Time.deltaTime);
-            m_Controller.center = Vector3.up * m_Controller.height * 0.5f;
-            playerCamera.transform.localPosition = Vector3.Lerp (playerCamera.transform.localPosition, Vector3.up * m_TargetCharacterHeight * cameraHeightRatio, crouchingSharpness * Time.deltaTime);
-            m_Actor.aimPoint.transform.localPosition = m_Controller.center;
         }
     }
 
@@ -242,13 +187,13 @@ public class PlayerCharacterController : MonoBehaviour {
     public bool SetCrouchingState (bool crouched, bool ignoreObstructions) {
         // set appropriate heights
         if (crouched) {
-            m_TargetCharacterHeight = capsuleHeightCrouching;
+            m_WalkController.m_TargetCharacterHeight = capsuleHeightCrouching;
         } else {
             // Detect obstructions
             if (!ignoreObstructions) {
                 Collider[] standingOverlaps = Physics.OverlapCapsule (
-                    GetCapsuleBottomHemisphere (),
-                    GetCapsuleTopHemisphere (capsuleHeightStanding),
+                    m_WalkController.GetCapsuleBottomHemisphere (),
+                    m_WalkController.GetCapsuleTopHemisphere (capsuleHeightStanding),
                     m_Controller.radius, -1,
                     QueryTriggerInteraction.Ignore);
                 foreach (Collider c in standingOverlaps) {
@@ -258,7 +203,7 @@ public class PlayerCharacterController : MonoBehaviour {
                 }
             }
 
-            m_TargetCharacterHeight = capsuleHeightStanding;
+            m_WalkController.m_TargetCharacterHeight = capsuleHeightStanding;
         }
 
         if (onStanceChanged != null) {

@@ -1,18 +1,43 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class lb_Bird : Interactible {
+
+	lb_BirdController controller;
 
 	// ===================================
 	// INTERACTION
 	// ===================================
+	private GameObject player;
+	private GameObject birdPlayer;
+
 	public string publicName { get; private set; } = "Bird";
 	void Awake () {
 		base.setPublicName (publicName);
+
+		player = GameObject.Find ("Player");
+		birdPlayer = player.transform.parent.transform.Find ("BirdPlayer").gameObject;
 	}
 
+	void Start () { }
+
+	// cleanup! E.g. import file with Important GameObjects instead of many of the Find calls
 	public override void TriggerInteraction () {
-		Debug.Log ("Birdy activated...");
+		birdPlayer.GetComponent<PlayerBirdController> ().InitTransform (transform, GetComponent<Rigidbody> ().velocity);
+
+		birdPlayer.SetActive (true);
+		player.SetActive (false);
+
+		GameObject.Find ("InteractionCanvas/InteractionText").GetComponent<Text> ().text = "";
+
+		GameObject[] critterSpawners = GameObject.FindGameObjectsWithTag ("CritterSpawner");
+		Camera birdCamera = GameObject.FindWithTag ("MainCamera").GetComponent<Camera> ();
+		foreach (GameObject spawner in critterSpawners) {
+			spawner.GetComponent<lb_BirdController> ().ChangeCamera (birdCamera);
+		}
+
+		controller.Unspawn (gameObject);
 	}
 
 	// ===================================
@@ -37,7 +62,6 @@ public class lb_Bird : Interactible {
 	public bool fleeCrows = true;
 
 	Animator anim;
-	lb_BirdController controller;
 
 	bool paused = false;
 	bool idle = true;
@@ -469,8 +493,8 @@ public class lb_Bird : Interactible {
 	void FlyAway () {
 		if (!dead) {
 			StopCoroutine ("FlyToTarget");
-			anim.SetBool (landingBoolHash, false);
-			controller.SendMessage ("BirdFindTarget", gameObject);
+			if (anim != null) anim.SetBool (landingBoolHash, false);
+			if (controller != null) controller.SendMessage ("BirdFindTarget", gameObject);
 		}
 	}
 
