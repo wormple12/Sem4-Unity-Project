@@ -16,26 +16,44 @@ public class lb_Bird : Interactible {
 	void Awake () {
 		base.setPublicName (publicName);
 
+		// cleanup! E.g. import file with Important GameObjects instead of many of the Find calls
 		player = GameObject.Find ("Player");
-		birdPlayer = player.transform.parent.transform.Find ("BirdPlayer").gameObject;
+		birdPlayer = player.transform.parent.transform.Find ("BirdCamMaster").Find ("BirdPlayer").gameObject;
+
+		birdCollider = gameObject.GetComponent<BoxCollider> ();
+		solidCollider = gameObject.GetComponent<SphereCollider> ();
+		anim = gameObject.GetComponent<Animator> ();
+		idleAnimationHash = Animator.StringToHash ("Base Layer.Idle");
+		//singAnimationHash = Animator.StringToHash ("Base Layer.sing");
+		//ruffleAnimationHash = Animator.StringToHash ("Base Layer.ruffle");
+		//preenAnimationHash = Animator.StringToHash ("Base Layer.preen");
+		//peckAnimationHash = Animator.StringToHash ("Base Layer.peck");
+		//hopForwardAnimationHash = Animator.StringToHash ("Base Layer.hopForward");
+		//hopBackwardAnimationHash = Animator.StringToHash ("Base Layer.hopBack");
+		//hopLeftAnimationHash = Animator.StringToHash ("Base Layer.hopLeft");
+		//hopRightAnimationHash = Animator.StringToHash ("Base Layer.hopRight");
+		//worriedAnimationHash = Animator.StringToHash ("Base Layer.worried");
+		//landingAnimationHash = Animator.StringToHash ("Base Layer.landing");
+		flyAnimationHash = Animator.StringToHash ("Base Layer.fly");
+		hopIntHash = Animator.StringToHash ("hop");
+		flyingBoolHash = Animator.StringToHash ("flying");
+		//perchedBoolHash = Animator.StringToHash("perched");
+		peckBoolHash = Animator.StringToHash ("peck");
+		ruffleBoolHash = Animator.StringToHash ("ruffle");
+		preenBoolHash = Animator.StringToHash ("preen");
+		//worriedBoolHash = Animator.StringToHash("worried");
+		landingBoolHash = Animator.StringToHash ("landing");
+		singTriggerHash = Animator.StringToHash ("sing");
+		flyingDirectionHash = Animator.StringToHash ("flyingDirectionX");
+		dieTriggerHash = Animator.StringToHash ("die");
 	}
 
 	void Start () { }
 
-	// cleanup! E.g. import file with Important GameObjects instead of many of the Find calls
 	public override void TriggerInteraction () {
 		birdPlayer.GetComponent<PlayerBirdController> ().InitTransform (transform, GetComponent<Rigidbody> ().velocity);
 
-		birdPlayer.SetActive (true);
-		player.SetActive (false);
-
 		GameObject.Find ("InteractionCanvas/InteractionText").GetComponent<Text> ().text = "";
-
-		GameObject[] critterSpawners = GameObject.FindGameObjectsWithTag ("CritterSpawner");
-		Camera birdCamera = GameObject.FindWithTag ("MainCamera").GetComponent<Camera> ();
-		foreach (GameObject spawner in critterSpawners) {
-			spawner.GetComponent<lb_BirdController> ().ChangeCamera (birdCamera);
-		}
 
 		controller.Unspawn (gameObject);
 	}
@@ -80,60 +98,15 @@ public class lb_Bird : Interactible {
 	Vector3 originalVelocity = Vector3.zero;
 
 	//hash variables for the animation states and animation properties
-	int idleAnimationHash;
-	int singAnimationHash;
-	int ruffleAnimationHash;
-	int preenAnimationHash;
-	int peckAnimationHash;
-	int hopForwardAnimationHash;
-	int hopBackwardAnimationHash;
-	int hopLeftAnimationHash;
-	int hopRightAnimationHash;
-	int worriedAnimationHash;
-	int landingAnimationHash;
-	int flyAnimationHash;
-	int hopIntHash;
-	int flyingBoolHash;
+	private int idleAnimationHash, singAnimationHash, ruffleAnimationHash, preenAnimationHash, peckAnimationHash, hopForwardAnimationHash,
+	hopBackwardAnimationHash, hopLeftAnimationHash, hopRightAnimationHash, worriedAnimationHash, landingAnimationHash, flyAnimationHash,
+	hopIntHash, flyingBoolHash, peckBoolHash, ruffleBoolHash, preenBoolHash, landingBoolHash, singTriggerHash, flyingDirectionHash, dieTriggerHash;
 	//int perchedBoolHash;
-	int peckBoolHash;
-	int ruffleBoolHash;
-	int preenBoolHash;
 	//int worriedBoolHash;
-	int landingBoolHash;
-	int singTriggerHash;
-	int flyingDirectionHash;
-	int dieTriggerHash;
 
 	void OnEnable () {
-		birdCollider = gameObject.GetComponent<BoxCollider> ();
 		bColCenter = birdCollider.center;
 		bColSize = birdCollider.size;
-		solidCollider = gameObject.GetComponent<SphereCollider> ();
-		anim = gameObject.GetComponent<Animator> ();
-
-		idleAnimationHash = Animator.StringToHash ("Base Layer.Idle");
-		//singAnimationHash = Animator.StringToHash ("Base Layer.sing");
-		//ruffleAnimationHash = Animator.StringToHash ("Base Layer.ruffle");
-		//preenAnimationHash = Animator.StringToHash ("Base Layer.preen");
-		//peckAnimationHash = Animator.StringToHash ("Base Layer.peck");
-		//hopForwardAnimationHash = Animator.StringToHash ("Base Layer.hopForward");
-		//hopBackwardAnimationHash = Animator.StringToHash ("Base Layer.hopBack");
-		//hopLeftAnimationHash = Animator.StringToHash ("Base Layer.hopLeft");
-		//hopRightAnimationHash = Animator.StringToHash ("Base Layer.hopRight");
-		//worriedAnimationHash = Animator.StringToHash ("Base Layer.worried");
-		//landingAnimationHash = Animator.StringToHash ("Base Layer.landing");
-		flyAnimationHash = Animator.StringToHash ("Base Layer.fly");
-		hopIntHash = Animator.StringToHash ("hop");
-		flyingBoolHash = Animator.StringToHash ("flying");
-		//perchedBoolHash = Animator.StringToHash("perched");
-		peckBoolHash = Animator.StringToHash ("peck");
-		ruffleBoolHash = Animator.StringToHash ("ruffle");
-		preenBoolHash = Animator.StringToHash ("preen");
-		//worriedBoolHash = Animator.StringToHash("worried");
-		landingBoolHash = Animator.StringToHash ("landing");
-		singTriggerHash = Animator.StringToHash ("sing");
-		flyingDirectionHash = Animator.StringToHash ("flyingDirectionX");
-		dieTriggerHash = Animator.StringToHash ("die");
 		anim.SetFloat ("IdleAgitated", agitationLevel);
 		if (dead) {
 			Revive ();
