@@ -21,6 +21,7 @@ public class FieldOfView : MonoBehaviour {
 	public float rotateSpeed = 1.0f;
 	public float maxRotation = 0f;
 	private float startRotation;
+	private float rotate;
 
 	public MeshFilter viewMeshFilter;
 	Mesh viewMesh;
@@ -35,13 +36,15 @@ public class FieldOfView : MonoBehaviour {
 		StartCoroutine ("FindTargetsWithDelay", .2f);
 		gam = GameObject.FindWithTag("Player");
 		pl = gam.GetComponent<Health> ();
+
 	}
 	void Update(){
 		if(visibleTargets.Count > 0){
 			//Debug.LogError(gam.transform.position);
 			pl.Kill ();
 		}
-		  transform.rotation = Quaternion.Euler(0f,startRotation + maxRotation * Mathf.Sin(Time.time * rotateSpeed), 0f);
+		rotate= startRotation + maxRotation * Mathf.Sin(Time.time * rotateSpeed);
+		 // transform.rotation = Quaternion.Euler(0f,startRotation + maxRotation * Mathf.Sin(Time.time * rotateSpeed), 0f);
 	} 
 
 	IEnumerator FindTargetsWithDelay(float delay) {
@@ -77,7 +80,9 @@ public class FieldOfView : MonoBehaviour {
 		List<Vector3> viewPoints = new List<Vector3> ();
 		ViewCastInfo oldViewCast = new ViewCastInfo ();
 		for (int i = 0; i <= stepCount; i++) {
-			float angle = transform.eulerAngles.y - viewAngle / 2 + stepAngleSize * i;
+			float angle = rotate - viewAngle / 2 + stepAngleSize * i;
+			//angle = startRotation + maxRotation * Mathf.Sin(Time.time * rotateSpeed);
+			//angle= rotate;
 			ViewCastInfo newViewCast = ViewCast (angle);
 
 			if (i > 0) {
