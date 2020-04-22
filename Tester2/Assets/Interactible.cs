@@ -5,12 +5,13 @@ using UnityEngine;
 public abstract class Interactible : MonoBehaviour {
 
     private string UI_name = "";
+    protected bool forceRemoveLabel = false;
 
-    public float interactionDistance = 1.5f;
+    public float interactionDistance = 3f;
 
     public abstract void TriggerInteraction ();
 
-    public void EndInteraction () { }
+    public virtual void EndInteraction () { }
 
     public string getPublicName () {
         return UI_name;
@@ -18,6 +19,10 @@ public abstract class Interactible : MonoBehaviour {
 
     public void setPublicName (string newName) {
         UI_name = newName;
+    }
+
+    public bool getForceRemoveLabel () {
+        return forceRemoveLabel;
     }
 
 }

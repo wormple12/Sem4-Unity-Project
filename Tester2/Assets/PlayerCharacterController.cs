@@ -37,8 +37,9 @@ public class PlayerCharacterController : MonoBehaviour {
 
     // ============================
     // CUSTOM INTERACTION VARIABLES
-    /* [Header ("Interaction")]
-    public float interactibleDetectionDistance = 3.0f; */
+    [Header ("Interaction")]
+    public float interactibleDetectionDistance = 3.0f;
+    public LayerMask layerMask;
     // ============================
 
     public Health m_Health { get; set; }
@@ -131,22 +132,29 @@ public class PlayerCharacterController : MonoBehaviour {
         CheckInteraction ();
     }
 
-    private void CheckInteraction () {
-        interactionText.text = "";
-        RaycastHit hit;
+    private Interactible viewedItem;
+    private Interactible activatedItem;
 
-        ray = mainCamera.ScreenPointToRay (Input.mousePosition);
-        if (Physics.Raycast (ray, out hit)) {
-            Interactible item = hit.transform.gameObject.GetComponent<Interactible> ();
-            if (item != null && Vector3.Distance (hit.transform.position, playerCamera.transform.position) <= item.interactionDistance) {
-                interactionText.text = "(E)" + item.getPublicName ();
-                if (Input.GetKeyDown (KeyCode.E)) {
-                    item.TriggerInteraction ();
-                }
-                if (Input.GetKeyUp (KeyCode.E)) {
-                    item.EndInteraction ();
-                }
+    private void CheckInteraction () {
+        RaycastHit hit;
+        ray = mainCamera.ViewportPointToRay (Vector3.one / 2f);
+
+        bool hasFoundValidItem = (Physics.Raycast (ray, out hit, interactibleDetectionDistance, layerMask));
+        if (hasFoundValidItem) {
+            viewedItem = hit.transform.gameObject.GetComponent<Interactible> ();
+            hasFoundValidItem = (viewedItem && Vector3.Distance (hit.transform.position, playerCamera.transform.position) <= viewedItem.interactionDistance);
+
+            if (hasFoundValidItem && Input.GetKeyDown (KeyCode.E)) {
+                activatedItem = viewedItem;
+                activatedItem.TriggerInteraction ();
             }
+        }
+
+        interactionText.text = (hasFoundValidItem && !viewedItem.getForceRemoveLabel ()) ? "(E) " + viewedItem.getPublicName () : "";
+
+        if (activatedItem && (!hasFoundValidItem || Input.GetKeyUp (KeyCode.E))) {
+            activatedItem.EndInteraction ();
+            activatedItem = null;
         }
     }
 
