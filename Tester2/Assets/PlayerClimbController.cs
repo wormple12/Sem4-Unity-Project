@@ -15,6 +15,7 @@ public class PlayerClimbController : MonoBehaviour {
     public float stickToWallForce = 5f;
 
     Ray ray;
+    public bool isStable { get; private set; } = false;
 
     // Start is called before the first frame update
     void Start () {
@@ -33,8 +34,9 @@ public class PlayerClimbController : MonoBehaviour {
 
     // Update is called once per frame
     void Update () {
-        var v = Input.GetAxis ("Vertical");
-        var move = transform.up * v;
-        m_Controller.Move (move * climbSpeed * Time.deltaTime);
+        float verticalInput = Input.GetAxis ("Vertical");
+        isStable = verticalInput < 0.1;
+        Vector3 movement = transform.up * verticalInput;
+        m_Controller.Move (movement * climbSpeed * Time.deltaTime);
     }
 }

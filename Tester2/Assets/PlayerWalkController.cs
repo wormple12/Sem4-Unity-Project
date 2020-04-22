@@ -176,7 +176,7 @@ public class PlayerWalkController : PlayerMovementController {
             m_Controller.height = m_TargetCharacterHeight;
             m_Controller.center = Vector3.up * m_Controller.height * 0.5f;
             playerCamera.transform.localPosition = Vector3.up * m_TargetCharacterHeight * cameraHeightRatio;
-            m_PlayerController.m_Actor.aimPoint.transform.localPosition = m_Controller.center;
+            //m_PlayerController.m_Actor.aimPoint.transform.localPosition = m_Controller.center;
         }
         // Update smooth height
         else if (m_Controller.height != m_TargetCharacterHeight) {
@@ -184,7 +184,7 @@ public class PlayerWalkController : PlayerMovementController {
             m_Controller.height = Mathf.Lerp (m_Controller.height, m_TargetCharacterHeight, m_PlayerController.crouchingSharpness * Time.deltaTime);
             m_Controller.center = Vector3.up * m_Controller.height * 0.5f;
             playerCamera.transform.localPosition = Vector3.Lerp (playerCamera.transform.localPosition, Vector3.up * m_TargetCharacterHeight * cameraHeightRatio, m_PlayerController.crouchingSharpness * Time.deltaTime);
-            m_PlayerController.m_Actor.aimPoint.transform.localPosition = m_Controller.center;
+            //m_PlayerController.m_Actor.aimPoint.transform.localPosition = m_Controller.center;
         }
     }
 }

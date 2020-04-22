@@ -10,6 +10,8 @@ public abstract class Interactible : MonoBehaviour {
 
     public abstract void TriggerInteraction ();
 
+    public void EndInteraction () { }
+
     public string getPublicName () {
         return UI_name;
     }

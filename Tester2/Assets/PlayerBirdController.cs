@@ -67,6 +67,9 @@ public class PlayerBirdController : PlayerMovementController {
         // see UpdateCameraRotation for further explanation
         m_CameraVerticalAngle = MyGameUtils.LimitVectorAngleTo90 (crowRotation.x);
 
+        // force crouch, so that it isn't standing up in a cramped space when reverting to human form
+        player.GetComponent<PlayerCharacterController> ().SetCrouchingState (true, true);
+
         birdCamMaster = transform.parent.gameObject;
         birdCamMaster.SetActive (true);
         player.SetActive (false);
@@ -105,6 +108,16 @@ public class PlayerBirdController : PlayerMovementController {
         if (Input.GetKeyDown (KeyCode.E)) {
             RevertToHuman ();
         }
+    }
+
+    private void RevertToHuman () {
+        player.SetActive (true);
+        birdCamMaster.SetActive (false);
+
+        player.GetComponent<PlayerCharacterController> ()
+            .TransformTo (transform.position, new Vector3 (playerCamera.transform.localEulerAngles.x, transform.localEulerAngles.y, 0), characterVelocity);
+
+        UpdateSpawnPoints ();
     }
 
     float camGroundingIntensity = 0.01f;
@@ -252,16 +265,6 @@ public class PlayerBirdController : PlayerMovementController {
         anim.SetBool (flyingBoolHash, true);
         anim.SetBool (landingBoolHash, false);
         anim.SetFloat (flyingDirectionHash, Vector3.Dot (transform.forward, Vector3.up));
-    }
-
-    private void RevertToHuman () {
-        player.SetActive (true);
-        birdCamMaster.SetActive (false);
-
-        player.GetComponent<PlayerCharacterController> ()
-            .TransformTo (transform.position, new Vector3 (playerCamera.transform.localEulerAngles.x, transform.localEulerAngles.y, 0), characterVelocity);
-
-        UpdateSpawnPoints ();
     }
 
     override protected void UpdateCharacterHeight (bool force) {

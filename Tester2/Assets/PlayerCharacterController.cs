@@ -1,12 +1,14 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
 [RequireComponent (typeof (CharacterController), typeof (PlayerInputHandler))]
 public class PlayerCharacterController : MonoBehaviour {
     [Header ("References")]
-    [Tooltip ("Reference to the main camera used for the player")]
+    [Tooltip ("Reference to the camera parent used for the player")]
     public GameObject playerCamera;
+    private Camera mainCamera;
 
     [Header ("Rotation")]
     [Tooltip ("Rotation speed for moving the camera")]
@@ -35,8 +37,8 @@ public class PlayerCharacterController : MonoBehaviour {
 
     // ============================
     // CUSTOM INTERACTION VARIABLES
-    [Header ("Interaction")]
-    public float interactibleDetectionDistance = 3.0f;
+    /* [Header ("Interaction")]
+    public float interactibleDetectionDistance = 3.0f; */
     // ============================
 
     public Health m_Health { get; set; }
@@ -89,6 +91,7 @@ public class PlayerCharacterController : MonoBehaviour {
         m_Actor = GetComponent<Actor> ();
         DebugUtility.HandleErrorIfNullGetComponent<Actor, PlayerCharacterController> (m_Actor, this, gameObject);
 
+        mainCamera = Camera.main;
         interactionText = GameObject.Find ("InteractionCanvas/InteractionText").GetComponent<Text> ();
 
         m_Health.onDie += OnDie;
@@ -100,7 +103,7 @@ public class PlayerCharacterController : MonoBehaviour {
     public void TransformTo (Vector3 targetPos, Vector3 targetRotation, Vector3 targetVelocity) {
         // convert to bird position
         transform.position = new Vector3 (targetPos.x, targetPos.y - capsuleHeightCrouching, targetPos.z);
-        SetCrouchingState (false, true);
+        StartCoroutine (AttemptToStandForXSeconds (1f));
 
         // convert to bird rotation
         transform.localEulerAngles = new Vector3 (0, targetRotation.y, 0);
@@ -130,15 +133,18 @@ public class PlayerCharacterController : MonoBehaviour {
 
     private void CheckInteraction () {
         interactionText.text = "";
-        Vector3 origin = playerCamera.transform.position;
-        Vector3 direction = playerCamera.transform.forward;
         RaycastHit hit;
-        if (Physics.Raycast (origin, direction, out hit, interactibleDetectionDistance)) {
+
+        ray = mainCamera.ScreenPointToRay (Input.mousePosition);
+        if (Physics.Raycast (ray, out hit)) {
             Interactible item = hit.transform.gameObject.GetComponent<Interactible> ();
             if (item != null && Vector3.Distance (hit.transform.position, playerCamera.transform.position) <= item.interactionDistance) {
-                interactionText.text = item.getPublicName ();
+                interactionText.text = "(E)" + item.getPublicName ();
                 if (Input.GetKeyDown (KeyCode.E)) {
                     item.TriggerInteraction ();
+                }
+                if (Input.GetKeyUp (KeyCode.E)) {
+                    item.EndInteraction ();
                 }
             }
         }
@@ -177,8 +183,9 @@ public class PlayerCharacterController : MonoBehaviour {
             }
         } else {
             RaycastHit raycastHit;
-            if (Input.GetKeyUp (KeyCode.Mouse1) || m_InputHandler.GetSprintInputHeld () || m_InputHandler.GetJumpInputDown () ||
-                (!Physics.Raycast (transform.position, transform.forward, out raycastHit, climbRayRange) || raycastHit.transform.tag != "Climbable")) {
+            if (Input.GetKeyUp (KeyCode.Mouse1) || m_InputHandler.GetSprintInputHeld () || m_InputHandler.GetJumpInputDown () || (!m_ClimbController.isStable &&
+                    (!Physics.Raycast (transform.position, transform.forward, out raycastHit, climbRayRange) || raycastHit.transform.tag != "Climbable")
+                )) {
                 isClimbing = false;
                 m_ClimbController.enabled = false;
                 m_WalkController.enabled = true;
@@ -216,5 +223,17 @@ public class PlayerCharacterController : MonoBehaviour {
 
         isCrouching = crouched;
         return true;
+    }
+
+    // rise to standing position if possible, otherwise stay crouching
+    private IEnumerator AttemptToStandForXSeconds (float x) {
+        float countDown = x;
+        for (int i = 0; i < 10000; i++) {
+            while (countDown >= 0) {
+                SetCrouchingState (false, false);
+                countDown -= Time.smoothDeltaTime;
+                yield return null;
+            }
+        }
     }
 }
