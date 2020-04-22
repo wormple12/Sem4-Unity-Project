@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class PlayerCharacterController : MonoBehaviour {
     [Header ("References")]
     [Tooltip ("Reference to the main camera used for the player")]
-    public Camera playerCamera;
+    public GameObject playerCamera;
 
     [Header ("Rotation")]
     [Tooltip ("Rotation speed for moving the camera")]
@@ -97,15 +97,19 @@ public class PlayerCharacterController : MonoBehaviour {
         SetCrouchingState (false, true);
     }
 
-    public void TransformTo (Vector3 targetPos, Vector3 targetRotation) {
-        transform.position = new Vector3 (targetPos.x, targetPos.y + 0.5f, targetPos.z);
-        transform.localEulerAngles = new Vector3 (0, targetRotation.y, 0);
+    public void TransformTo (Vector3 targetPos, Vector3 targetRotation, Vector3 targetVelocity) {
+        // convert to bird position
+        transform.position = new Vector3 (targetPos.x, targetPos.y - capsuleHeightCrouching, targetPos.z);
+        SetCrouchingState (false, true);
 
+        // convert to bird rotation
+        transform.localEulerAngles = new Vector3 (0, targetRotation.y, 0);
         // fixing weird issue with vertical rotation where it went above 90 and the camera clamp would break the desired rotation:
         m_CameraVerticalAngle = MyGameUtils.LimitVectorAngleTo90 (targetRotation.x);
-
         playerCamera.transform.localEulerAngles = new Vector3 (m_CameraVerticalAngle, 0, 0);
-        transform.position += playerCamera.transform.forward * 2;
+
+        // convert to bird velocity
+        m_WalkController.characterVelocity += targetVelocity * 1.1f;
     }
 
     void Update () {

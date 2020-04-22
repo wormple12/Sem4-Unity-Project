@@ -164,7 +164,7 @@ public class PlayerWeaponsManager : MonoBehaviour {
 
     // Sets the FOV of the main camera and the weapon camera simultaneously
     public void SetFOV (float fov) {
-        m_PlayerCharacterController.playerCamera.fieldOfView = fov;
+        // m_PlayerCharacterController.playerCamera.fieldOfView = fov; //the playerCamera variable has been changed to GameObject type since Cinemachine conversion
         weaponCamera.fieldOfView = fov * weaponFOVMultiplier;
     }
 
@@ -231,10 +231,10 @@ public class PlayerWeaponsManager : MonoBehaviour {
             WeaponController activeWeapon = GetActiveWeapon ();
             if (isAiming && activeWeapon) {
                 m_WeaponMainLocalPosition = Vector3.Lerp (m_WeaponMainLocalPosition, aimingWeaponPosition.localPosition + activeWeapon.aimOffset, aimingAnimationSpeed * Time.deltaTime);
-                SetFOV (Mathf.Lerp (m_PlayerCharacterController.playerCamera.fieldOfView, activeWeapon.aimZoomRatio * defaultFOV, aimingAnimationSpeed * Time.deltaTime));
+                //SetFOV (Mathf.Lerp (m_PlayerCharacterController.playerCamera.fieldOfView, activeWeapon.aimZoomRatio * defaultFOV, aimingAnimationSpeed * Time.deltaTime)); // see playerCamera ref above
             } else {
                 m_WeaponMainLocalPosition = Vector3.Lerp (m_WeaponMainLocalPosition, defaultWeaponPosition.localPosition, aimingAnimationSpeed * Time.deltaTime);
-                SetFOV (Mathf.Lerp (m_PlayerCharacterController.playerCamera.fieldOfView, defaultFOV, aimingAnimationSpeed * Time.deltaTime));
+                //SetFOV (Mathf.Lerp (m_PlayerCharacterController.playerCamera.fieldOfView, defaultFOV, aimingAnimationSpeed * Time.deltaTime)); // see playerCamera ref above
             }
         }
     }

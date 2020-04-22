@@ -259,7 +259,7 @@ public class PlayerBirdController : PlayerMovementController {
         birdCamMaster.SetActive (false);
 
         player.GetComponent<PlayerCharacterController> ()
-            .TransformTo (transform.position, new Vector3 (playerCamera.transform.localEulerAngles.x, transform.localEulerAngles.y, 0));
+            .TransformTo (transform.position, new Vector3 (playerCamera.transform.localEulerAngles.x, transform.localEulerAngles.y, 0), characterVelocity);
 
         UpdateSpawnPoints ();
     }

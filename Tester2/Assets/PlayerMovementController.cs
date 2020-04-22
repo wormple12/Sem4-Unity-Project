@@ -9,7 +9,7 @@ abstract public class PlayerMovementController : MonoBehaviour {
 
     [Header ("References")]
     [Tooltip ("Reference to the main camera used for the player")]
-    public Camera playerCamera;
+    public GameObject playerCamera;
 
     [Header ("General")]
     [Tooltip ("Force applied downward when in the air")]
@@ -72,7 +72,7 @@ abstract public class PlayerMovementController : MonoBehaviour {
 
     virtual protected void HandleLastUpdate () { }
 
-    private void GroundCheck () {
+    public void GroundCheck () {
         // Make sure that the ground check distance while already in air is very small, to prevent suddenly snapping to ground
         float chosenGroundCheckDistance = isGrounded ? (m_Controller.skinWidth + groundCheckDistance) : k_GroundCheckDistanceInAir;
 
