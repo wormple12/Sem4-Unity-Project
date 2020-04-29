@@ -3,41 +3,21 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Leveraction : Interactible {
-    private GameObject door;
-    public string publicName { get; private set; } = "Lever";
+
+    public string activationLabel = "Pull";
+    public string nameLabel = "Lever";
     void Awake () {
-        base.setPublicName (publicName);
-        door=  GameObject.Find ("LeverDoor");
+        base.setPublicName (activationLabel + "\n" + nameLabel);
     }
 
-    // Smoothly open a door
-    public float doorOpenAngle = -90.0f; //Set either positive or negative number to open the door inwards or outwards
-    public float openSpeed = 1.2f; //Increasing this value will make the door open faster
-    public bool isOpened = false;
-
-   
-    Transform myParent;
-    float defaultRotationAngle;
-    float currentRotationAngle;
-    float openTime = 0;
+    public Interactible targetToActivate;
 
     // Start is called before the first frame update
-    void Start () {
-        myParent = door.transform;
-        defaultRotationAngle = myParent.localEulerAngles.y;
-        currentRotationAngle = myParent.localEulerAngles.y;
-    }
+    void Start () { }
 
     public override void TriggerInteraction () {
-        isOpened = !isOpened;
-        currentRotationAngle = myParent.localEulerAngles.y;
-        openTime = 0;
+        targetToActivate.TriggerInteraction ();
     }
 
-    void Update () {
-        if (openTime < 1) {
-            openTime += Time.deltaTime * openSpeed;
-        }
-        myParent.transform.localEulerAngles = new Vector3 (myParent.localEulerAngles.x, Mathf.LerpAngle (currentRotationAngle, defaultRotationAngle + (isOpened ? doorOpenAngle : 0), openTime), myParent.localEulerAngles.z);
-    }
+    void Update () { }
 }

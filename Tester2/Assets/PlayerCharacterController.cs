@@ -50,10 +50,9 @@ public class PlayerCharacterController : MonoBehaviour {
     PlayerWeaponsManager m_WeaponsManager;
     public Actor m_Actor { get; private set; }
     Text interactionText;
-
     Ray ray;
-    public UnityAction<bool> onStanceChanged;
 
+    public UnityAction onStanceChanged; // See StanceHUD.cs
     public bool isDead { get; private set; }
     public bool isCrouching { get; private set; }
     public bool isClimbing { get; private set; }
@@ -142,7 +141,9 @@ public class PlayerCharacterController : MonoBehaviour {
         bool hasFoundValidItem = (Physics.Raycast (ray, out hit, interactibleDetectionDistance, layerMask));
         if (hasFoundValidItem) {
             viewedItem = hit.transform.gameObject.GetComponent<Interactible> ();
-            if (viewedItem && !viewedItem.enabled) viewedItem = null;
+            if (viewedItem) {
+                if (!viewedItem.enabled || viewedItem.hasExternalTrigger) viewedItem = null;
+            }
             hasFoundValidItem = (viewedItem && Vector3.Distance (hit.transform.position, playerCamera.transform.position) <= viewedItem.interactionDistance);
 
             if (hasFoundValidItem && Input.GetKeyDown (KeyCode.E)) {
@@ -188,17 +189,23 @@ public class PlayerCharacterController : MonoBehaviour {
                     isClimbing = true;
                     m_WalkController.enabled = false;
                     m_ClimbController.enabled = true;
+                    if (onStanceChanged != null) {
+                        onStanceChanged.Invoke ();
+                    }
                 }
             }
         } else {
             RaycastHit raycastHit;
-            if (Input.GetKeyUp (KeyCode.Mouse1) || m_InputHandler.GetSprintInputHeld () || m_InputHandler.GetJumpInputDown () || (!m_ClimbController.isStable &&
+            if (Input.GetKeyUp (KeyCode.Mouse1) || m_InputHandler.GetSprintInputDown () || m_InputHandler.GetJumpInputDown () || (!m_ClimbController.isStable &&
                     (!Physics.Raycast (transform.position, transform.forward, out raycastHit, climbRayRange) || raycastHit.transform.tag != "Climbable")
                 )) {
                 isClimbing = false;
                 m_ClimbController.enabled = false;
                 m_WalkController.enabled = true;
                 m_WalkController.characterVelocity = Vector3.up * 5f;
+                if (onStanceChanged != null) {
+                    onStanceChanged.Invoke ();
+                }
             }
         }
     }
@@ -226,11 +233,11 @@ public class PlayerCharacterController : MonoBehaviour {
             m_WalkController.m_TargetCharacterHeight = capsuleHeightStanding;
         }
 
-        if (onStanceChanged != null) {
-            onStanceChanged.Invoke (crouched);
-        }
-
         isCrouching = crouched;
+
+        if (onStanceChanged != null) {
+            onStanceChanged.Invoke ();
+        }
         return true;
     }
 

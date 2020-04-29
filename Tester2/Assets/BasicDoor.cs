@@ -5,9 +5,9 @@ using UnityEngine;
 public class BasicDoor : Interactible {
 
     public string activationLabel { get; private set; } = "Open";
-    public string name = "Door";
+    public string nameLabel = "Door";
     void Awake () {
-        base.setPublicName (activationLabel + "\n" + name);
+        base.setPublicName (activationLabel + "\n" + nameLabel);
     }
 
     // Smoothly open a door

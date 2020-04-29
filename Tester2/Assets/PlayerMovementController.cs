@@ -5,6 +5,7 @@ using UnityEngine;
 abstract public class PlayerMovementController : MonoBehaviour {
 
     protected CharacterController m_Controller;
+    protected PlayerCharacterController m_PlayerController;
     protected PlayerInputHandler m_InputHandler;
 
     [Header ("References")]
@@ -52,13 +53,16 @@ abstract public class PlayerMovementController : MonoBehaviour {
         HandleFirstUpdate ();
         UpdateCharacterHeight (false);
 
+        if (hasJumpedThisFrame) m_PlayerController.onStanceChanged.Invoke ();
         hasJumpedThisFrame = false;
         bool wasGrounded = isGrounded;
         GroundCheck ();
         // landing
         if (isGrounded && !wasGrounded) {
             HandleLanding ();
+            m_PlayerController.onStanceChanged.Invoke ();
         }
+        if (!isGrounded && wasGrounded) m_PlayerController.onStanceChanged.Invoke ();
 
         HandleCharacterMovement ();
         HandleLastUpdate ();
