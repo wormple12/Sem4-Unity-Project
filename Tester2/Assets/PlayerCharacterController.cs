@@ -142,6 +142,7 @@ public class PlayerCharacterController : MonoBehaviour {
         bool hasFoundValidItem = (Physics.Raycast (ray, out hit, interactibleDetectionDistance, layerMask));
         if (hasFoundValidItem) {
             viewedItem = hit.transform.gameObject.GetComponent<Interactible> ();
+            if (viewedItem && !viewedItem.enabled) viewedItem = null;
             hasFoundValidItem = (viewedItem && Vector3.Distance (hit.transform.position, playerCamera.transform.position) <= viewedItem.interactionDistance);
 
             if (hasFoundValidItem && Input.GetKeyDown (KeyCode.E)) {

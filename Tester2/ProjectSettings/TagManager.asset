@@ -9,6 +9,7 @@ TagManager:
   - lb_perchTarget
   - lb_bird
   - CritterSpawner
+  - NPC
   layers:
   - Default
   - TransparentFX

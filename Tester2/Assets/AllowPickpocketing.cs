@@ -59,6 +59,7 @@ public class AllowPickpocketing : Interactible {
         if (isStealing && secondsPassed > secondsToSteal) {
             stolenTotal += (int) wealthLevel;
             Debug.Log ("You stole $" + (int) wealthLevel + "! Your total cash: $" + stolenTotal + ".");
+            enabled = false;
         }
 
         isStealing = false;
