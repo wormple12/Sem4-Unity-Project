@@ -1,11 +1,14 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 
 public class BasicDoor : Interactible {
 
     public string activationLabel { get; private set; } = "Open";
     public string name = "Door";
+    public string nextScene= "";
     void Awake () {
         base.setPublicName (activationLabel + "\n" + name);
     }
@@ -31,6 +34,8 @@ public class BasicDoor : Interactible {
         isOpened = !isOpened;
         currentRotationAngle = myParent.localEulerAngles.y;
         openTime = 0;
+        if(nextScene.Length >= 1)
+            SceneManager.LoadScene(nextScene);
     }
 
     void Update () {
