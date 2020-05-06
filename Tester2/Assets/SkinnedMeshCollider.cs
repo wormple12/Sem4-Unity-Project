@@ -6,7 +6,7 @@ public class SkinnedMeshCollider : MonoBehaviour {
     // Start is called before the first frame update
     void Start () {
         meshRenderer = GetComponent<SkinnedMeshRenderer> ();
-        collider = GetComponent<MeshCollider> ();
+        meshCollider = GetComponent<MeshCollider> ();
     }
 
     private float time = 0;
@@ -20,12 +20,12 @@ public class SkinnedMeshCollider : MonoBehaviour {
     }
 
     SkinnedMeshRenderer meshRenderer;
-    MeshCollider collider;
+    MeshCollider meshCollider;
 
     public void UpdateCollider () {
         Mesh colliderMesh = new Mesh ();
         meshRenderer.BakeMesh (colliderMesh);
-        collider.sharedMesh = null;
-        collider.sharedMesh = colliderMesh;
+        meshCollider.sharedMesh = null;
+        meshCollider.sharedMesh = colliderMesh;
     }
 }

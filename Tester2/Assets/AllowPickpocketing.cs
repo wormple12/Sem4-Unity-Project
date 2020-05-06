@@ -6,9 +6,9 @@ using UnityEngine.UI;
 public class AllowPickpocketing : Interactible {
 
     public string activationLabel { get; private set; } = "Pickpocket";
-    public string name = "Guard";
+    public string nameLabel = "Guard";
     void Awake () {
-        base.setPublicName (activationLabel + "\n" + name);
+        base.setPublicName (activationLabel + "\n" + nameLabel);
     }
 
     //public GameObject normalCrosshair;

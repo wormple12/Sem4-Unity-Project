@@ -7,10 +7,14 @@ using UnityEngine.SceneManagement;
 public class BasicDoor : Interactible {
 
     public string activationLabel { get; private set; } = "Open";
+<<<<<<< HEAD
     public string name = "Door";
     public string nextScene= "";
+=======
+    public string nameLabel = "Door";
+>>>>>>> 0c4abb10f9184fa3b7e891d42061dcd9af71b07b
     void Awake () {
-        base.setPublicName (activationLabel + "\n" + name);
+        base.setPublicName (activationLabel + "\n" + nameLabel);
     }
 
     // Smoothly open a door

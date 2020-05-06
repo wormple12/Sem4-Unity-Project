@@ -5,8 +5,6 @@ using UnityEngine;
 [RequireComponent (typeof (CharacterController), typeof (PlayerInputHandler), typeof (AudioSource))]
 public class PlayerWalkController : PlayerMovementController {
 
-    PlayerCharacterController m_PlayerController;
-
     [Tooltip ("Audio source for footsteps, jump, etc...")]
     public AudioSource audioSource;
 
@@ -56,6 +54,7 @@ public class PlayerWalkController : PlayerMovementController {
     public AudioClip fallDamageSFX;
 
     float m_footstepDistanceCounter;
+    public bool isSprinting { get; private set; }
 
     // Is called before the first frame update
     override protected void InitController () {
@@ -65,7 +64,14 @@ public class PlayerWalkController : PlayerMovementController {
 
     override protected void HandleCharacterMovement () {
         // character movement handling
-        bool isSprinting = m_InputHandler.GetSprintInputHeld ();
+        if (m_InputHandler.GetSprintInputDown ()) {
+            isSprinting = true;
+            m_PlayerController.onStanceChanged.Invoke ();
+        }
+        if (m_InputHandler.GetSprintInputReleased ()) {
+            isSprinting = false;
+            m_PlayerController.onStanceChanged.Invoke ();
+        }
         if (isSprinting) {
             isSprinting = m_PlayerController.SetCrouchingState (false, false);
         }
@@ -168,6 +174,7 @@ public class PlayerWalkController : PlayerMovementController {
             // land SFX
             audioSource.PlayOneShot (landSFX);
         }
+        m_PlayerController.onStanceChanged.Invoke ();
     }
 
     override protected void UpdateCharacterHeight (bool force) {

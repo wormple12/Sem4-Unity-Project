@@ -68,7 +68,8 @@ public class PlayerBirdController : PlayerMovementController {
         m_CameraVerticalAngle = MyGameUtils.LimitVectorAngleTo90 (crowRotation.x);
 
         // force crouch, so that it isn't standing up in a cramped space when reverting to human form
-        player.GetComponent<PlayerCharacterController> ().SetCrouchingState (true, true);
+        if (!m_PlayerController) m_PlayerController = player.GetComponent<PlayerCharacterController> ();
+        m_PlayerController.SetCrouchingState (true, true);
 
         birdCamMaster = transform.parent.gameObject;
         birdCamMaster.SetActive (true);

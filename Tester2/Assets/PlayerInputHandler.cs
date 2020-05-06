@@ -99,9 +99,17 @@ public class PlayerInputHandler : MonoBehaviour {
         return false;
     }
 
-    public bool GetSprintInputHeld () {
+    public bool GetSprintInputDown () {
         if (CanProcessInput ()) {
-            return Input.GetButton (GameConstants.k_ButtonNameSprint);
+            return Input.GetButtonDown (GameConstants.k_ButtonNameSprint);
+        }
+
+        return false;
+    }
+
+    public bool GetSprintInputReleased () {
+        if (CanProcessInput ()) {
+            return Input.GetButtonUp (GameConstants.k_ButtonNameSprint);
         }
 
         return false;

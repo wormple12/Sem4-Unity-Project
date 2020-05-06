@@ -13,9 +13,9 @@ public class lb_Bird : Interactible {
 	private GameObject birdPlayer;
 
 	public string activationLabel { get; private set; } = "Possess";
-	public string name = "Bird";
+	public string nameLabel = "Bird";
 	void Awake () {
-		base.setPublicName (activationLabel + "\n" + name);
+		base.setPublicName (activationLabel + "\n" + nameLabel);
 
 		// cleanup! E.g. import file with Important GameObjects instead of many of the Find calls
 		player = GameObject.Find ("Player");
@@ -54,7 +54,6 @@ public class lb_Bird : Interactible {
 	public override void TriggerInteraction () {
 		birdPlayer.GetComponent<PlayerBirdController> ().InitTransform (transform, GetComponent<Rigidbody> ().velocity);
 
-		//GameObject.Find ("InteractionCanvas/InteractionText").GetComponent<Text> ().text = "";
 		forceRemoveLabel = true;
 
 		controller.Unspawn (gameObject);
