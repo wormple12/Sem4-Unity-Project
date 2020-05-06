@@ -1,9 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class AllowPickpocketing : Interactible {
+public class AllowLooting : Interactible {
 
     public string activationLabel { get; private set; } = "Pickpocket";
     public string nameLabel = "Guard";
@@ -11,8 +12,9 @@ public class AllowPickpocketing : Interactible {
         base.setPublicName (activationLabel + "\n" + nameLabel);
     }
 
-    //public GameObject normalCrosshair;
-    public GameObject loadingCircle;
+    private TextMeshProUGUI cashCounter;
+    private NotificationHUDManager notificationManager;
+    private GameObject loadingCircle;
     private List<Image> progressImages = new List<Image> ();
 
     [SerializeField]
@@ -21,6 +23,9 @@ public class AllowPickpocketing : Interactible {
 
     // Start is called before the first frame update
     void Start () {
+        loadingCircle = GameObject.Find ("Crosshair").transform.Find ("LoadingCircle").gameObject;
+        notificationManager = GameObject.Find ("GameHUD").GetComponent<NotificationHUDManager> ();
+        cashCounter = GameObject.Find ("CashCounter").GetComponent<TextMeshProUGUI> ();
         foreach (Transform child in loadingCircle.transform) {
             Image progressImage = child.gameObject.GetComponent<Image> ();
             progressImages.Add (progressImage);
@@ -28,7 +33,6 @@ public class AllowPickpocketing : Interactible {
     }
 
     public override void TriggerInteraction () {
-        //normalCrosshair.SetActive (false);
         loadingCircle.SetActive (true);
         isStealing = true;
         secondsPassed = 0;
@@ -58,7 +62,8 @@ public class AllowPickpocketing : Interactible {
     public override void EndInteraction () {
         if (isStealing && secondsPassed > secondsToSteal) {
             stolenTotal += (int) wealthLevel;
-            Debug.Log ("You stole $" + (int) wealthLevel + "! Your total cash: $" + stolenTotal + ".");
+            notificationManager.CreateNotification ("You have stolen $ " + (int) wealthLevel);
+            cashCounter.SetText ("$ " + stolenTotal);
             enabled = false;
         }
 

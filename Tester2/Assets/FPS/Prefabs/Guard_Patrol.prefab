@@ -400,8 +400,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   hasExternalTrigger: 0
   interactionDistance: 3.5
-  name: Guard
-  loadingCircle: {fileID: 0}
+  nameLabel: Guard
   wealthLevel: 10
   secondsToSteal: 3
 --- !u!1 &6779710003860634153
