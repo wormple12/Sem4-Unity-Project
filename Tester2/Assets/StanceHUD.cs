@@ -33,7 +33,7 @@ public class StanceHUD : MonoBehaviour {
 
     void OnStanceChanged () {
         bool isBird = !character.gameObject.activeInHierarchy;
-        PlayerMovementController movementController = FindObjectOfType<PlayerMovementController> (); //GameObject.FindWithTag ("Player").GetComponent
+        PlayerMovementController movementController = FindObjectOfType<PlayerMovementController> ();
         if (isBird) {
             if (!movementController.isGrounded) {
                 stanceImage.sprite = flyingBirdSprite;

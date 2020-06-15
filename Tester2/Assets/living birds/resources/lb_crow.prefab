@@ -2094,8 +2094,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a58512123bcd224eb61112b203e6413, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  hasExternalTrigger: 0
   interactionDistance: 2.2
-  name: Bird
+  nameLabel: Bird
   song1: {fileID: 8300000, guid: e2622b95524aab94b9a0448a1a4c6fc8, type: 3}
   song2: {fileID: 8300000, guid: aa29893140715234fa4c6f0f17bc3d88, type: 3}
   flyAway1: {fileID: 8300000, guid: 9dabaef0cd2ecb241956e3db52d3bc8d, type: 3}
