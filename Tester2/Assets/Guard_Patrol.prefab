@@ -1804,7 +1804,9 @@ MonoBehaviour:
   FOV: {fileID: 5193251416115139819}
   speed: 1.5
   rotationSpeed: 2
-  moveSpots: []
+  moveSpots:
+  - {fileID: 0}
+  - {fileID: 0}
   defaultWaitTime: 5
   headRotationSpeed: 1
   headMaxRotation: 35
@@ -1820,7 +1822,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a75f7f83c75bf8c43b203d3bb63b4d67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  anim: {fileID: 0}
+  anim: {fileID: 1041610228115383080}
 --- !u!1 &1041610228122669394
 GameObject:
   m_ObjectHideFlags: 0
@@ -1834,7 +1836,7 @@ GameObject:
   - component: {fileID: 1041610226719184678}
   - component: {fileID: 1041610226719184679}
   - component: {fileID: 1041610226719184677}
-  m_Layer: 2
+  m_Layer: 12
   m_Name: Dummy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1998,6 +2000,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   hasExternalTrigger: 0
   interactionDistance: 3.5
+  activationLabel: Pickpocket
   nameLabel: Guard
   wealthLevel: 10
   secondsToSteal: 3
@@ -2242,8 +2245,9 @@ MonoBehaviour:
   obstacleMask:
     serializedVersion: 2
     m_Bits: 513
-  damageModifier: 2
+  damageModifier: 3
   healingCooldown: 2
+  visibleTargets: []
 --- !u!1 &5792425889449856252
 GameObject:
   m_ObjectHideFlags: 0
