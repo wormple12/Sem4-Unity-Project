@@ -19,7 +19,7 @@ public class VolumetricLightFOV : MonoBehaviour {
 	public float damageModifier = 2f;
 	public float healingCooldown = 2.0f;
 
-	List<Transform> visibleTargets = new List<Transform> ();
+	public List<Transform> visibleTargets = new List<Transform> ();
 
 	GameObject player;
 	Health health { get; set; }

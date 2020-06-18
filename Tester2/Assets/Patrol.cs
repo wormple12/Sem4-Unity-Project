@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+//using TMPro;
 public class Patrol : MonoBehaviour {
 
     public GameObject FOV = null;
@@ -21,32 +21,40 @@ public class Patrol : MonoBehaviour {
 
     Quaternion headLeftTurn, headRightTurn;
     float headTurnTime;
+    private VolumetricLightFOV info; 
 
     void Start () {
         toSpot = 0;
         waitTime = defaultWaitTime;
+        info = FOV.GetComponent<VolumetricLightFOV>();
         ResetHeadRotation ();
     }
 
     void Update () {
+        if(info.visibleTargets.Count > 0) {
 
-        if (moveSpots.Length != 0) {
-            transform.position = Vector3.MoveTowards (transform.position, moveSpots[toSpot].position, speed * Time.deltaTime);
+        }
+        else{
+            if (moveSpots.Length != 0) {
+                transform.position = Vector3.MoveTowards (transform.position, moveSpots[toSpot].position, speed * Time.deltaTime);
 
-            RotateTowardsMoveSpot (moveSpots[toSpot]);
+                RotateTowardsMoveSpot (moveSpots[toSpot]);
 
-            if (Vector3.Distance (transform.position, moveSpots[toSpot].position) < 0.2f) {
-                if (waitTime <= 0 && IsHeadRotationAtCenter ()) {
-                    if (toSpot == moveSpots.Length - 1) {
-                        toSpot = 0;
-                    } else {
-                        toSpot = toSpot + 1;
+                if (Vector3.Distance (transform.position, moveSpots[toSpot].position) < 0.2f) {
+                    if (waitTime <= 0 && IsHeadRotationAtCenter ()) {
+                        if (toSpot == moveSpots.Length - 1) {
+                          toSpot = 0;
+                        } 
+                        else {
+                          toSpot = toSpot + 1;
+                        }
+                        waitTime = defaultWaitTime;
+                        ResetHeadRotation ();
+                    } 
+                    else {
+                        waitTime -= Time.deltaTime;
+                        RotateHead ();
                     }
-                    waitTime = defaultWaitTime;
-                    ResetHeadRotation ();
-                } else {
-                    waitTime -= Time.deltaTime;
-                    RotateHead ();
                 }
             }
         }
