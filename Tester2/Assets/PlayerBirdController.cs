@@ -1,9 +1,17 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 [RequireComponent (typeof (CharacterController), typeof (PlayerInputHandler), typeof (AudioSource))]
 public class PlayerBirdController : PlayerMovementController {
+
+    [Header ("Possession")]
+    [Tooltip ("Time as a bird before reverting to human form")]
+    public int possessDuration = 20;
+    [HideInInspector]
+    public int timeRemaining;
+    private TextMeshProUGUI possessCounter;
 
     [Header ("References")]
     [Tooltip ("Audio source for them hot wings...")]
@@ -53,8 +61,7 @@ public class PlayerBirdController : PlayerMovementController {
     private int idleAnimationHash, singAnimationHash, ruffleAnimationHash, preenAnimationHash, peckAnimationHash, hopForwardAnimationHash,
     hopBackwardAnimationHash, hopLeftAnimationHash, hopRightAnimationHash, worriedAnimationHash, landingAnimationHash, flyAnimationHash,
     hopIntHash, flyingBoolHash, peckBoolHash, ruffleBoolHash, preenBoolHash, landingBoolHash, singTriggerHash, flyingDirectionHash, dieTriggerHash;
-    //int perchedBoolHash;
-    //int worriedBoolHash;
+    //int perchedBoolHash, worriedBoolHash;
     private bool isFlying = false;
 
     public void InitTransform (Transform bird, Vector3 velocityAtTransformation) {
@@ -76,12 +83,15 @@ public class PlayerBirdController : PlayerMovementController {
         player.SetActive (false);
 
         characterVelocity = velocityAtTransformation;
+        timeRemaining = possessDuration;
+        Invoke ("_timerCount", 1f);
 
         UpdateSpawnPoints ();
     }
 
     // Is called before the first frame update
     override protected void InitController () {
+        possessCounter = GameObject.Find ("PossessCounter").GetComponent<TextMeshProUGUI> ();
         m_TargetCharacterHeight = capsuleHeight;
 
         anim = transform.Find ("lb_crow").gameObject.GetComponent<Animator> ();
@@ -105,13 +115,24 @@ public class PlayerBirdController : PlayerMovementController {
         UpdateCameraRotation ();
     }
 
+    private void _timerCount () {
+        timeRemaining--;
+        if (timeRemaining > 0) {
+            possessCounter.SetText (timeRemaining.ToString ());
+            Invoke ("_timerCount", 1f);
+        } else {
+            possessCounter.SetText ("");
+        }
+    }
+
     override protected void HandleLastUpdate () {
-        if (Input.GetKeyDown (KeyCode.E)) {
+        if (Input.GetMouseButtonDown (0) || timeRemaining <= 0) {
+            timeRemaining = 0;
             RevertToHuman ();
         }
     }
 
-    private void RevertToHuman () {
+    public void RevertToHuman () {
         player.SetActive (true);
         birdCamMaster.SetActive (false);
 

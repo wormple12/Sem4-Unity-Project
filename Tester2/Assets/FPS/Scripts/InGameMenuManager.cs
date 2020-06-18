@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class InGameMenuManager : MonoBehaviour {
@@ -14,6 +15,8 @@ public class InGameMenuManager : MonoBehaviour {
     public Toggle shadowsToggle;
     [Tooltip ("Toggle component for invincibility")]
     public Toggle invincibilityToggle;
+    [Tooltip ("Button component for restarting level")]
+    public Button restartButton;
 
     PlayerInputHandler m_PlayerInputsHandler;
     Health m_PlayerHealth;
@@ -36,6 +39,7 @@ public class InGameMenuManager : MonoBehaviour {
         invincibilityToggle.isOn = m_PlayerHealth.invincible;
         invincibilityToggle.onValueChanged.AddListener (OnInvincibilityChanged);
 
+        restartButton.onClick.AddListener (OnLevelRestart);
     }
 
     private void Update () {
@@ -95,5 +99,10 @@ public class InGameMenuManager : MonoBehaviour {
 
     void OnInvincibilityChanged (bool newValue) {
         m_PlayerHealth.invincible = newValue;
+    }
+
+    void OnLevelRestart () {
+        ClosePauseMenu ();
+        SceneManager.LoadScene (SceneManager.GetActiveScene ().name);
     }
 }

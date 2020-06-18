@@ -1802,10 +1802,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   FOV: {fileID: 5193251416115139819}
-  speed: 1
+  speed: 1.5
   rotationSpeed: 2
   moveSpots: []
-  defaultWaitTime: 2
+  defaultWaitTime: 5
   headRotationSpeed: 1
   headMaxRotation: 35
 --- !u!114 &1041610228491211311

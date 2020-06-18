@@ -146,15 +146,15 @@ public class PlayerCharacterController : MonoBehaviour {
             }
             hasFoundValidItem = (viewedItem && Vector3.Distance (hit.transform.position, playerCamera.transform.position) <= viewedItem.interactionDistance);
 
-            if (hasFoundValidItem && Input.GetKeyDown (KeyCode.E)) {
+            if (hasFoundValidItem && Input.GetMouseButtonDown (0)) {
                 activatedItem = viewedItem;
                 activatedItem.TriggerInteraction ();
             }
         }
 
-        interactionText.text = (hasFoundValidItem && !viewedItem.getForceRemoveLabel ()) ? "(E) " + viewedItem.getPublicName () : "";
+        interactionText.text = (hasFoundValidItem && !viewedItem.getForceRemoveLabel ()) ? viewedItem.getPublicName () : "";
 
-        if (activatedItem && (!hasFoundValidItem || Input.GetKeyUp (KeyCode.E))) {
+        if (activatedItem && (!hasFoundValidItem || Input.GetMouseButtonUp (0))) {
             activatedItem.EndInteraction ();
             activatedItem = null;
         }

@@ -52,8 +52,9 @@ public class lb_Bird : Interactible {
 	void Start () { }
 
 	public override void TriggerInteraction () {
-		birdPlayer.GetComponent<PlayerBirdController> ().InitTransform (transform, GetComponent<Rigidbody> ().velocity);
-
+		if (!dead) {
+			birdPlayer.GetComponent<PlayerBirdController> ().InitTransform (transform, GetComponent<Rigidbody> ().velocity);
+		}
 		forceRemoveLabel = true;
 
 		controller.Unspawn (gameObject);
@@ -507,27 +508,14 @@ public class lb_Bird : Interactible {
 			birdCollider.size = new Vector3 (0.1f, 0.01f, 0.1f) * controller.birdScale;
 			GetComponent<Rigidbody> ().isKinematic = false;
 			GetComponent<Rigidbody> ().useGravity = true;
+			activationLabel = "Remove";
+			//controller.Invoke ("Unspawn", 10f); // use StartCouroutine instead
 		}
 	}
 
 	public void KillBirdWithForce (Vector3 force) {
 		if (!dead) {
-			controller.SendMessage ("FeatherEmit", transform.position);
-			anim.SetTrigger (dieTriggerHash);
-			anim.applyRootMotion = false;
-			dead = true;
-			onGround = false;
-			flying = false;
-			landing = false;
-			idle = false;
-			perched = false;
-			AbortFlyToTarget ();
-			StopAllCoroutines ();
-			GetComponent<Collider> ().isTrigger = false;
-			birdCollider.center = new Vector3 (0.0f, 0.0f, 0.0f);
-			birdCollider.size = new Vector3 (0.1f, 0.01f, 0.1f) * controller.birdScale;
-			GetComponent<Rigidbody> ().isKinematic = false;
-			GetComponent<Rigidbody> ().useGravity = true;
+			KillBird ();
 			GetComponent<Rigidbody> ().AddForce (force);
 		}
 	}

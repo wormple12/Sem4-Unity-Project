@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 public class AllowLooting : Interactible {
 
-    public string activationLabel { get; private set; } = "Pickpocket";
+    public string activationLabel = "Pickpocket";
     public string nameLabel = "Guard";
     void Awake () {
         base.setPublicName (activationLabel + "\n" + nameLabel);
@@ -17,6 +17,7 @@ public class AllowLooting : Interactible {
     private GameObject loadingCircle;
     private List<Image> progressImages = new List<Image> ();
 
+    private static int stolenTotal = 0;
     [SerializeField]
     public WealthLevel wealthLevel = WealthLevel.POOR;
     public float secondsToSteal = 3f;
@@ -55,9 +56,6 @@ public class AllowLooting : Interactible {
             }
         }
     }
-
-    // temporary count of stolen cash
-    private static int stolenTotal = 0;
 
     public override void EndInteraction () {
         if (isStealing && secondsPassed > secondsToSteal) {
