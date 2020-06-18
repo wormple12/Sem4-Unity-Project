@@ -57,7 +57,8 @@ public class lb_Bird : Interactible {
 		}
 		forceRemoveLabel = true;
 
-		controller.Unspawn (gameObject);
+		if (controller != null)
+			controller.Unspawn (gameObject);
 	}
 
 	// ===================================
