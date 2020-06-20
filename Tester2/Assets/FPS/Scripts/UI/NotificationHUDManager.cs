@@ -6,19 +6,27 @@ public class NotificationHUDManager : MonoBehaviour
     public RectTransform notificationPanel;
     [Tooltip("Prefab for the notifications")]
     public GameObject notificationPrefab;
-
-
+    GameObject player;
+    Health health { get; set; }
+    
     void Awake()
     {
         PlayerWeaponsManager playerWeaponsManager = FindObjectOfType<PlayerWeaponsManager>();
         DebugUtility.HandleErrorIfNullFindObject<PlayerWeaponsManager, NotificationHUDManager>(playerWeaponsManager, this);
         playerWeaponsManager.onAddedWeapon += OnPickupWeapon;
-
+        
         /* Jetpack jetpack = FindObjectOfType<Jetpack>();
         DebugUtility.HandleErrorIfNullFindObject<Jetpack, NotificationHUDManager>(jetpack, this);
         jetpack.onUnlockJetpack += OnUnlockJetpack; */
     }
+    void Start (){
+        player = GameObject.FindWithTag ("Player");
+		health = player.GetComponent<Health> ();
+    }
 
+    void Update (){
+        
+    }
     void OnUpdateObjective(UnityActionUpdateObjective updateObjective)
     {
         if (!string.IsNullOrEmpty(updateObjective.notificationText))

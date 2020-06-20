@@ -23,6 +23,7 @@ public class LvlDoor : Interactible {
     }
 
     public override void TriggerInteraction () {
+        Debug.LogError("Hello");
         if(cash == 20)
             SceneManager.LoadScene ("Level2");
         else if(nextScene.Length >= 1)
