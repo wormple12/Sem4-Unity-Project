@@ -19,13 +19,13 @@ public class LvlDoor : Interactible {
 
     void Start () {
         cashCounter = GameObject.Find ("CashCounter").GetComponent<TextMeshProUGUI> ();
-        cash= int.Parse(cashCounter.text.Replace(@"$", ""));
+        
     }
 
     public override void TriggerInteraction () {
-        Debug.LogError("Hello");
-        if(cash == 20)
-            SceneManager.LoadScene ("Level2");
+        cash= int.Parse(cashCounter.text.Replace(@"$", ""));
+        if(SceneManager.GetActiveScene().name == "Level2" && cash == 20)
+            SceneManager.LoadScene("Level1");
         else if(nextScene.Length >= 1)
             SceneManager.LoadScene (nextScene);
     }
